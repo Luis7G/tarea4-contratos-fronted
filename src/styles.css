@@ -1,1 +1,42 @@
-/* You can add global styles to this file, and also import other style files */
+  @media print {
+    @page {
+      margin: 0;
+	  margin-bottom: 50px;
+	  margin-left: 50px;
+	margin-right: 50px;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    .print-header {
+      height: 130px;
+	        text-align: center; /* Centra la imagen horizontalmente */
+
+    }
+
+    .print-header img {
+  
+      height: 120px;
+  
+    }
+
+    .contract-preview {
+  padding: 10px 50px 0 50px; /* Arriba: 20px, Derecha: 50px, Abajo: 0, Izquierda: 50px */
+      text-align: justify;
+      font-family: "Bookman Old Style", serif;
+      font-size: 12pt;
+      line-height: 2.5;
+
+    }
+
+    thead {
+      display: table-header-group;
+    }
+
+    tfoot {
+      display: table-footer-group;
+    }
+  }
