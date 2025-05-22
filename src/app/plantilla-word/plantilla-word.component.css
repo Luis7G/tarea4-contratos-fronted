@@ -1,36 +1,44 @@
+/* General page structure and centering */
+#print {
+  max-width: 850px; /* Adjust as needed for your preferred width */
+  margin: 30px auto; /* Centers the content on the page */
+  padding: 20px; /* Adds some space inside the bordered area */
+  background: #fff; /* Ensures a white background for the document */
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.15); /* Adds a subtle shadow for a "document" feel */
+  border: 1px solid #ccc; /* Optional: adds a light border */
+}
+
 /* Print specific styles */
 @media print {
   @page {
-    margin: 0;
-    margin-bottom: 50px;
-    margin-left: 50px;
-    margin-right: 50px;
+    margin: 50px; /* Standard print margins */
   }
 
-  body {
+  body, #print {
     margin: 0;
     padding: 0;
+    box-shadow: none;
+    border: none;
+    max-width: none; /* Allow full width for printing */
+    background: transparent;
   }
 
   .print-header {
-    height: 130px;
-    text-align: center; /* Centra la imagen horizontalmente */
+    height: auto; /* Adjust height automatically for content */
+    text-align: center;
+    padding-bottom: 20px; /* Space below header before content starts */
   }
 
-  /* Note: The original .print-header img { height: 120px; } rule was overridden by inline styles for the logo.
-     The .logo-img class now defines the logo's height consistently.
-     If other images were intended to be 120px, specific rules would be needed. */
-
   .contract-preview {
-    padding: 10px 50px 0 50px; /* Arriba: 20px, Derecha: 50px, Abajo: 0, Izquierda: 50px */
-    text-align: justify;
+    padding: 0; /* Remove padding for print if @page margins are sufficient */
     font-family: "Bookman Old Style", serif;
     font-size: 12pt;
-    line-height: 2.5;
+    line-height: 1.6; /* Professional line spacing */
+    text-align: justify;
   }
 
   thead {
-    display: table-header-group;
+    display: table-header-group; /* Ensures header repeats on each printed page */
   }
 
   tfoot {
@@ -38,35 +46,35 @@
   }
 }
 
-/* General styles */
+/* General styles for on-screen display */
 .contract-header-table {
   border-collapse: collapse;
   text-align: left;
   font-family: Arial, sans-serif;
   table-layout: fixed;
-  width: 94%;
-  margin: auto;
-  border: 1px solid black; /* Replaces border="1" */
+  width: 100%; /* Takes full width of its container (#print) */
+  margin: 0 auto 20px auto; /* Center table and add margin below */
+  border: 1px solid black;
 }
 
 .contract-header-table td {
-  padding: 1px; /* Base padding */
-  vertical-align: middle; /* Common vertical alignment */
-  /* text-align is left by default from .contract-header-table */
+  padding: 2px 5px; /* Consistent padding */
+  vertical-align: middle;
+  border: 1px solid black; /* Ensure all cells have borders if the table has one */
 }
 
 .header-cell-logo {
   width: 20%;
   text-align: center;
   vertical-align: middle;
-  padding: 2px;
-  height: 70px;
+  padding: 5px;
+  height: auto; /* Auto height based on content */
 }
 
 .logo-img {
   max-width: 100%;
-  height: 80px; /* Consistent height for the logo */
-  display: block; /* For auto margins to work for centering */
+  height: 70px; /* Adjusted logo height */
+  display: block;
   margin-left: auto;
   margin-right: auto;
 }
@@ -75,32 +83,148 @@
   width: 40%;
   text-align: center;
   vertical-align: middle;
-  font-size: 18px;
+  font-size: 16px; /* Adjusted for better balance */
   font-weight: bold;
-  padding: 2px;
-  line-height: 1;
+  padding: 5px;
+  line-height: 1.2;
 }
 
 .header-cell-info {
-  /* For cells with font-size 11px */
-  font-size: 11px;
-  padding: 1px;
-  height: 20px;
-  vertical-align: middle; /* Explicitly set */
-  text-align: left; /* Explicitly set */
+  font-size: 10pt; /* Using points for consistency */
+  padding: 2px 5px;
+  height: auto;
+  vertical-align: middle;
+  text-align: left;
 }
 
 .header-cell-detail {
-  /* For cells with font-size 12px */
-  font-size: 12px;
-  padding: 2px;
-  vertical-align: middle; /* Explicitly set */
-  text-align: left; /* Explicitly set */
+  font-size: 10pt; /* Using points for consistency */
+  padding: 2px 5px;
+  vertical-align: middle;
+  text-align: left;
+}
+
+.contract-preview {
+  padding: 20px; /* Padding for the main content area on screen */
+  text-align: justify;
+  font-family: "Bookman Old Style", serif;
+  font-size: 12pt; /* Standard document font size */
+  line-height: 1.6; /* Improved line spacing for readability */
 }
 
 .contract-paragraph {
-  margin: 0 0 15px 0;
-  font-size: 15.5px;
-  line-height: 1.35;
-  /* Inherits text-align: justify and font-family from .contract-preview */
+  margin: 0 0 1em 0; /* Use em for spacing relative to font size */
+  /* Font size and line height inherited from .contract-preview */
+}
+
+.contract-paragraph strong {
+  font-weight: bold; /* Ensures strong tags are bold */
+}
+
+/* Utility class for placeholders if needed, though <strong> should suffice */
+.placeholder-text {
+  font-style: italic;
+  color: #555;
+}
+
+.form-container {
+  margin-bottom: 30px; /* Espacio entre el formulario y la vista previa del contrato */
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.form-section {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px dashed #ccc;
+}
+
+.form-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.form-section h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #337ab7;
+  font-size: 1.2em;
+}
+.form-section h4 {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  color: #555;
+  font-size: 1.1em;
+}
+
+.form-section label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+  font-size: 0.95em;
+  color: #444;
+}
+
+.form-section input[type="text"],
+.form-section input[type="email"],
+.form-section input[type="number"], /* Si usas number para algunos campos */
+.form-section select,
+.form-section textarea {
+  width: calc(100% - 22px); /* Ajustar por padding y borde */
+  padding: 8px 10px;
+  margin-top: 3px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 0.95em;
+  font-family: Arial, sans-serif;
+}
+
+.form-section textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.form-section select {
+   width: 100%; /* Selects a menudo se ven mejor al 100% */
+}
+
+/* Estilos para los contenedores de opciones condicionales */
+.form-section > div[style*="display: block;"], /* Para *ngIf que se muestran */
+.form-section > div[ngif] { /* Otra forma de apuntar a los *ngIf */
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #f0f0f0;
+  border-left: 3px solid #337ab7;
+}
+
+/* Styles for Image Drop Zone */
+
+
+.image-drop-zone {
+  border: 2px dashed #ccc;
+  border-radius: 5px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  background-color: #f9f9f9;
+  margin-bottom: 15px;
+  min-height: 100px; /* Ajusta según necesidad */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-drop-zone:hover {
+  border-color: #337ab7;
+  background-color: #f0f8ff;
+}
+
+.image-drop-zone img {
+  display: block;
+  margin-bottom: 10px;
 }
