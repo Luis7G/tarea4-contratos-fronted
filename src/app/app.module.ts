@@ -3,7 +3,7 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { PlantillaWordComponent } from './plantilla-word/plantilla-word.component';
+import { PlantillaWordComponent } from './plantilla-word/contrato-adquisicion-bienes.component';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 

@@ -11,7 +11,20 @@ declare const html2pdf: any;
 
 // Interfaz para estructurar los datos del contrato
 export interface ContratoData {
-  // Datos Generales del Contratista
+  // Datos Generales del Contratante (nuevos campos)
+  tipoRepresentanteContratante:
+    | 'gerente_general'
+    | 'apoderado_especial'
+    | 'superintendente'
+    | '';
+  apoderadoEspecialSeleccionado: 'damian_molina' | 'roberto_alomoto' | '';
+  nombreProyectoSuperintendente: string;
+  nombreSuperintendente: string;
+  documentoRespaldoContratante: File | null;
+
+  // Datos Generales del Contratista}
+  nombreContratista: string; // Nuevo campo para el nombre del contratista
+
   rucContratista: string;
   tipoRepresentanteContratista:
     | 'representante_legal'
@@ -29,6 +42,8 @@ export interface ContratoData {
   // Cláusula Cuarta
   clausulaCuartaDescripcionBienes: string;
   clausulaCuartaLugarEntrega: string;
+  ofertaContemplaSoporteTecnico: boolean; // Para determinar si mostrar la cláusula adicional
+  capacitacionRequierePersonalCertificado: boolean; // Para el caso 3
   clausulaCuartaLapsoSoporte: string;
   clausulaCuartaCapacitacionNumeroServidores: string; // Podría ser number
   clausulaCuartaCapacitacionLugar: string;
@@ -36,6 +51,7 @@ export interface ContratoData {
 
   // Cláusula Quinta
   clausulaQuintaPrecioTotalLetrasNumeros: number | null; // MODIFIED: Changed to number | null
+  clausulaQuintaPrecioTotalLetras: string; // Para el precio en letras
   clausulaQuintaImagenTablaCantidades: File | null; // Para la imagen de la tabla
 
   // Cláusula Sexta
@@ -50,8 +66,12 @@ export interface ContratoData {
   beneficiarioCorreo: string;
 
   // Cláusula Séptima
-  clausulaSeptimaGarantiasOpcion: string; // Para seleccionar OPCION 1.1, 1.2, 2.1, 2.2
-  clausulaSeptimaTextoGeneral: string; // Texto general de garantías si no es por opción
+  requiereGarantiaTecnica: boolean; // Solo para contratos ≤ 50k sin anticipo
+  requiereGarantiaBuenUsoAnticipo: boolean; // Solo para contratos ≤ 20k con anticipo
+  tipoGarantiaTecnica: 'del_fabricante' | 'incondicional_irrevocable' | '';
+  plazoGarantiaTecnica: string;
+  clausulaSeptimaGarantiasOpcion: string;
+  clausulaSeptimaTextoGeneral: string;
 
   // Cláusula Octava
   clausulaOctavaEstadoBienes:
@@ -101,21 +121,34 @@ export interface ContratoData {
 
 @Component({
   selector: 'app-plantilla-word',
-  standalone: false, // Asumo que sigue siendo parte de un NgModule
-  templateUrl: './plantilla-word.component.html',
-  styleUrl: './plantilla-word.component.css',
+  standalone: false,
+  templateUrl: './contrato-adquisicion-bienes.component.html',
+  styleUrls: ['./contrato-adquisicion-bienes.component.css'],
 })
 export class PlantillaWordComponent implements AfterViewInit {
   @ViewChild('print', { static: false }) contentRef!: ElementRef; // Cambiado a 'print' si ese es el ID del div a imprimir
   @ViewChild('fileDropRef', { static: false }) fileDropRef!: ElementRef; // Para el input de archivo
+  @ViewChild('documentoRespaldoRef', { static: false })
+  documentoRespaldoRef!: ElementRef; // Para el input del documento de respaldo
 
   // Datos del contrato que se mostrarán en la plantilla
   contratoData: ContratoData;
   selectedFileName: string | null = null;
   previewImageUrl: string | ArrayBuffer | null = null;
 
+  // Nuevas propiedades para el documento de respaldo del contratante
+  selectedDocumentFileName: string | null = null;
+  previewDocumentUrl: string | ArrayBuffer | null = null;
+
   constructor() {
     this.contratoData = {
+      // Nuevos campos para representante contratante
+      tipoRepresentanteContratante: '',
+      apoderadoEspecialSeleccionado: '',
+      nombreProyectoSuperintendente: '',
+      nombreSuperintendente: '',
+      documentoRespaldoContratante: null,
+      nombreContratista: '', // Inicializar nuevo campo
       rucContratista: '',
       // representanteLegalContratista: '', // Removido
       tipoRepresentanteContratista: '', // Initialize
@@ -129,8 +162,14 @@ export class PlantillaWordComponent implements AfterViewInit {
       clausulaCuartaCapacitacionLugar: '',
       clausulaCuartaCapacitacionPersonalCertificado: '',
       clausulaQuintaPrecioTotalLetrasNumeros: null,
-      // clausulaQuintaTablaCantidadesPrecios: '', // Removido
+      ofertaContemplaSoporteTecnico: false,
+      capacitacionRequierePersonalCertificado: false,
       clausulaQuintaImagenTablaCantidades: null, // Inicializar
+      clausulaQuintaPrecioTotalLetras: '',
+      requiereGarantiaTecnica: false,
+      requiereGarantiaBuenUsoAnticipo: false, // Nuevo campo
+      tipoGarantiaTecnica: '',
+      plazoGarantiaTecnica: '',
       clausulaSextaFormaPagoOpcion: '',
       clausulaSextaFormaPagoTextoGeneral: '',
       beneficiarioBanco: '',
@@ -183,6 +222,126 @@ export class PlantillaWordComponent implements AfterViewInit {
     }
   }
 
+  // Métodos para obtener el texto del representante contratante
+  getRepresentanteContratanteTexto(): string {
+    switch (this.contratoData.tipoRepresentanteContratante) {
+      case 'gerente_general':
+        return 'representada por su Gerente General, la Compañía GEMADEMSA S.A., empresa que a su vez está representada legalmente por su Gerente General, el Abogado Diego Fernando Zárate Valdivieso, según nombramiento que forma parte de este contrato';
+
+      case 'apoderado_especial':
+        const nombreApoderado = this.getNombreApoderadoEspecial();
+        return `representada por su apoderado especial, ${nombreApoderado}, según poder que forma parte de este contrato`;
+
+      case 'superintendente':
+        const nombreProyecto =
+          this.contratoData.nombreProyectoSuperintendente ||
+          '[nombre del proyecto]';
+        const nombreSuperintendente =
+          this.contratoData.nombreSuperintendente ||
+          '[nombre del superintendente]';
+        return `a través del Superintendente del Proyecto ${nombreProyecto}, ${nombreSuperintendente}, según documento que forma parte de este contrato`;
+
+      default:
+        return 'representada por [SELECCIONE TIPO DE REPRESENTANTE]';
+    }
+  }
+
+  getNombreApoderadoEspecial(): string {
+    switch (this.contratoData.apoderadoEspecialSeleccionado) {
+      case 'damian_molina':
+        return 'Damián Oswaldo Molina Bernal';
+      case 'roberto_alomoto':
+        return 'Roberto Jaime Alomoto Landeta';
+      default:
+        return '[Seleccione apoderado]';
+    }
+  }
+
+  // Resetear campos cuando cambia el tipo de representante
+  onTipoRepresentanteContratanteChange(): void {
+    // Limpiar campos específicos cuando cambia la selección
+    this.contratoData.apoderadoEspecialSeleccionado = '';
+    this.contratoData.nombreProyectoSuperintendente = '';
+    this.contratoData.nombreSuperintendente = '';
+
+    // Solo limpiar documento si NO es superintendente, o si cambia de superintendente a otra opción
+    if (this.contratoData.tipoRepresentanteContratante !== 'superintendente') {
+      this.clearDocumentSelection();
+    }
+  }
+
+  // --- Métodos para el manejo del documento de respaldo del contratante ---
+  onDocumentFileDropped(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+      this.handleDocumentFile(event.dataTransfer.files[0]);
+      event.dataTransfer.clearData();
+    }
+  }
+
+  onDocumentDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  onDocumentDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  onDocumentFileSelected(event: Event): void {
+    const element = event.currentTarget as HTMLInputElement;
+    if (element.files && element.files.length > 0) {
+      this.handleDocumentFile(element.files[0]);
+    }
+  }
+
+  private handleDocumentFile(file: File): void {
+    const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = [
+      'application/pdf',
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/jpg',
+    ];
+
+    if (file.size > maxSizeInBytes) {
+      alert('El archivo excede el tamaño máximo permitido de 5MB.');
+      this.clearDocumentSelection();
+      return;
+    }
+
+    if (!allowedTypes.includes(file.type)) {
+      alert('Por favor, seleccione un archivo válido (PDF, JPEG, PNG, GIF).');
+      this.clearDocumentSelection();
+      return;
+    }
+
+    this.contratoData.documentoRespaldoContratante = file;
+    this.selectedDocumentFileName = file.name;
+
+    // Preview solo para imágenes
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) =>
+        (this.previewDocumentUrl = e.target?.result || null);
+      reader.readAsDataURL(file);
+    } else {
+      this.previewDocumentUrl = null; // No preview para PDFs
+    }
+  }
+
+  clearDocumentSelection(): void {
+    this.contratoData.documentoRespaldoContratante = null;
+    this.selectedDocumentFileName = null;
+    this.previewDocumentUrl = null;
+    if (this.documentoRespaldoRef?.nativeElement) {
+      this.documentoRespaldoRef.nativeElement.value = ''; // Resetea el input file
+    }
+  }
+
   onPriceChange(): void {
     const price = this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros;
 
@@ -190,15 +349,209 @@ export class PlantillaWordComponent implements AfterViewInit {
       // Si el precio no es válido, limpiar las opciones dependientes
       this.contratoData.clausulaSextaFormaPagoOpcion = '';
       this.contratoData.clausulaSeptimaGarantiasOpcion = '';
+      this.contratoData.requiereGarantiaTecnica = false;
+      this.contratoData.requiereGarantiaBuenUsoAnticipo = false;
     } else {
-      // Si el precio es válido, actualizar la opción de garantía
+      // Convertir número a letras (función auxiliar)
+      this.contratoData.clausulaQuintaPrecioTotalLetras =
+        this.convertirNumeroALetras(price);
+
+      // Actualizar la opción de garantía
       this.updateGuaranteeOption();
     }
+  }
+
+  // Métodos auxiliares actualizados
+  isContratoMenorIgualA20k(): boolean {
+    return (
+      this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros !== null &&
+      this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros <= 20000
+    );
+  }
+
+  isContratoMenorIgualA50k(): boolean {
+    return (
+      this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros !== null &&
+      this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros <= 50000
+    );
+  }
+
+  isContratoMayorA50k(): boolean {
+    return (
+      this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros !== null &&
+      this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros > 50000
+    );
+  }
+
+  // Nuevos métodos para determinar cuándo mostrar checkboxes
+  shouldShowGarantiaTecnicaCheckbox(): boolean {
+    const price = this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros;
+    const paymentOption = this.contratoData.clausulaSextaFormaPagoOpcion;
+
+    // Solo mostrar checkbox si es ≤ 50k SIN anticipo (opcional)
+    return (
+      price !== null &&
+      price <= 50000 &&
+      !!paymentOption &&
+      paymentOption !== 'con_anticipo'
+    );
+  }
+
+  shouldShowGarantiaBuenUsoAnticipoCheckbox(): boolean {
+    const price = this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros;
+    const paymentOption = this.contratoData.clausulaSextaFormaPagoOpcion;
+
+    // Solo mostrar checkbox si es ≤ 20k CON anticipo (opcional)
+    return price !== null && price <= 20000 && paymentOption === 'con_anticipo';
+  }
+
+  // Método para determinar si la garantía técnica es obligatoria
+  isGarantiaTecnicaObligatoria(): boolean {
+    const price = this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros;
+    const paymentOption = this.contratoData.clausulaSextaFormaPagoOpcion;
+
+    if (!price || !paymentOption) return false;
+
+    // Obligatoria si: > 50k (siempre) O ≤ 50k CON anticipo
+    return (
+      price > 50000 || (price <= 50000 && paymentOption === 'con_anticipo')
+    );
+  }
+
+  // Método para determinar si la garantía de buen uso del anticipo es obligatoria
+  isGarantiaBuenUsoAnticipoObligatoria(): boolean {
+    const price = this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros;
+    const paymentOption = this.contratoData.clausulaSextaFormaPagoOpcion;
+
+    if (!price || paymentOption !== 'con_anticipo') return false;
+
+    // Obligatoria si: > 20k CON anticipo
+    return price > 20000;
   }
 
   onPaymentOptionChange(): void {
     // Cuando cambia la opción de pago, actualizar la opción de garantía
     this.updateGuaranteeOption();
+  }
+
+  // Métodos auxiliares
+  isContratoMenorA50k(): boolean {
+    return (
+      this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros !== null &&
+      this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros < 50000
+    );
+  }
+
+  isContratoMayorIgualA50k(): boolean {
+    return (
+      this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros !== null &&
+      this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros >= 50000
+    );
+  }
+
+  shouldShowGarantiaTecnicaOption(): boolean {
+    return (
+      this.isContratoMenorA50k() &&
+      !!this.contratoData.clausulaSextaFormaPagoOpcion
+    );
+  }
+
+  shouldIncludeClausulaSegundaPuntoC(): boolean {
+    const price = this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros;
+    const paymentOption = this.contratoData.clausulaSextaFormaPagoOpcion;
+
+    if (!price || !paymentOption) return false;
+
+    // Incluir punto c) si:
+    // - Hay anticipo (cualquier monto), O
+    // - Es contrato ≥ 50k (siempre), O
+    // - Es contrato < 50k sin anticipo pero con garantía técnica
+    return (
+      paymentOption === 'con_anticipo' ||
+      price >= 50000 ||
+      (price < 50000 && this.contratoData.requiereGarantiaTecnica === true)
+    );
+  }
+
+  getTipoGarantiaTecnicaTexto(): string {
+    switch (this.contratoData.tipoGarantiaTecnica) {
+      case 'del_fabricante':
+        return 'del fabricante, representante, distribuidor o vendedor autorizado';
+      case 'incondicional_irrevocable':
+        return 'incondicional, irrevocable y de cobro inmediato, o fianza instrumentada en una póliza de seguros, otorgadas, por un banco, institución financiera o compañía de seguros establecidos en el Ecuador, o por intermedio de ellos, por igual valor de los bienes a suministrarse';
+      default:
+        return '[SELECCIONE TIPO DE GARANTÍA]';
+    }
+  }
+
+  // Función auxiliar para convertir números a letras (básica)
+  private convertirNumeroALetras(numero: number): string {
+    // Implementación básica - puedes usar una librería más completa
+    const unidades = [
+      '',
+      'uno',
+      'dos',
+      'tres',
+      'cuatro',
+      'cinco',
+      'seis',
+      'siete',
+      'ocho',
+      'nueve',
+    ];
+    const decenas = [
+      '',
+      '',
+      'veinte',
+      'treinta',
+      'cuarenta',
+      'cincuenta',
+      'sesenta',
+      'setenta',
+      'ochenta',
+      'noventa',
+    ];
+    const centenas = [
+      '',
+      'ciento',
+      'doscientos',
+      'trescientos',
+      'cuatrocientos',
+      'quinientos',
+      'seiscientos',
+      'setecientos',
+      'ochocientos',
+      'novecientos',
+    ];
+
+    if (numero === 0) return 'cero';
+    if (numero < 0) return 'menos ' + this.convertirNumeroALetras(-numero);
+
+    // Implementación simplificada para números hasta 999,999
+    if (numero < 10) return unidades[numero];
+    if (numero < 100) {
+      if (numero < 20) {
+        const especiales = [
+          'diez',
+          'once',
+          'doce',
+          'trece',
+          'catorce',
+          'quince',
+          'dieciséis',
+          'diecisiete',
+          'dieciocho',
+          'diecinueve',
+        ];
+        return especiales[numero - 10];
+      }
+      const dec = Math.floor(numero / 10);
+      const uni = numero % 10;
+      return decenas[dec] + (uni > 0 ? ' y ' + unidades[uni] : '');
+    }
+
+    // Para números más grandes, retornar una representación básica
+    return numero.toLocaleString('es-ES').replace(/,/g, ' ');
   }
 
   private updateGuaranteeOption(): void {
@@ -210,30 +563,50 @@ export class PlantillaWordComponent implements AfterViewInit {
       return;
     }
 
-    if (price < 50000) {
+    // Determinar automáticamente las garantías obligatorias
+
+    // Garantía técnica obligatoria
+    if (this.isGarantiaTecnicaObligatoria()) {
+      this.contratoData.requiereGarantiaTecnica = true;
+    }
+
+    // Garantía de buen uso del anticipo obligatoria
+    if (this.isGarantiaBuenUsoAnticipoObligatoria()) {
+      this.contratoData.requiereGarantiaBuenUsoAnticipo = true;
+    }
+
+    // Determinar la opción de garantías según el monto y forma de pago
+    if (price <= 50000) {
       if (paymentOption === 'con_anticipo') {
         this.contratoData.clausulaSeptimaGarantiasOpcion = 'opcion1_2';
-      } else if (
-        paymentOption === 'sin_anticipo_un_pago' ||
-        paymentOption === 'sin_anticipo_varios_pagos'
-      ) {
-        this.contratoData.clausulaSeptimaGarantiasOpcion = 'opcion1_1';
       } else {
-        this.contratoData.clausulaSeptimaGarantiasOpcion = ''; // Si la opción de pago no coincide
+        this.contratoData.clausulaSeptimaGarantiasOpcion = 'opcion1_1';
       }
     } else {
-      // price >= 50000
       if (paymentOption === 'con_anticipo') {
         this.contratoData.clausulaSeptimaGarantiasOpcion = 'opcion2_1';
-      } else if (
-        paymentOption === 'sin_anticipo_un_pago' ||
-        paymentOption === 'sin_anticipo_varios_pagos'
-      ) {
-        this.contratoData.clausulaSeptimaGarantiasOpcion = 'opcion2_2';
       } else {
-        this.contratoData.clausulaSeptimaGarantiasOpcion = ''; // Si la opción de pago no coincide
+        this.contratoData.clausulaSeptimaGarantiasOpcion = 'opcion2_2';
       }
     }
+  }
+
+  // Método para determinar si mostrar la cláusula adicional de soporte técnico
+  shouldShowClausulaCuartaAdicional(): boolean {
+    return this.contratoData.ofertaContemplaSoporteTecnico === true;
+  }
+
+  // Método para determinar si incluir texto de personal certificado
+  shouldIncludePersonalCertificado(): boolean {
+    return (
+      this.contratoData.ofertaContemplaSoporteTecnico &&
+      this.contratoData.capacitacionRequierePersonalCertificado
+    );
+  }
+
+  // Método para obtener el lapso de garantía técnica de la Cláusula Séptima
+  getLapsoGarantiaTecnica(): string {
+    return this.contratoData.plazoGarantiaTecnica || '[LAPSO_GARANTIA_TECNICA]';
   }
 
   // Ajustar contenido para evitar cortes de texto

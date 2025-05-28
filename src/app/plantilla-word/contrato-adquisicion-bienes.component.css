@@ -14,7 +14,8 @@
     margin: 50px; /* Standard print margins */
   }
 
-  body, #print {
+  body,
+  #print {
     margin: 0;
     padding: 0;
     box-shadow: none;
@@ -189,12 +190,13 @@
 }
 
 .form-section select {
-   width: 100%; /* Selects a menudo se ven mejor al 100% */
+  width: 100%; /* Selects a menudo se ven mejor al 100% */
 }
 
 /* Estilos para los contenedores de opciones condicionales */
 .form-section > div[style*="display: block;"], /* Para *ngIf que se muestran */
-.form-section > div[ngif] { /* Otra forma de apuntar a los *ngIf */
+.form-section > div[ngif] {
+  /* Otra forma de apuntar a los *ngIf */
   margin-top: 10px;
   padding: 10px;
   background-color: #f0f0f0;
@@ -202,7 +204,6 @@
 }
 
 /* Styles for Image Drop Zone */
-
 
 .image-drop-zone {
   border: 2px dashed #ccc;
@@ -227,4 +228,15 @@
 .image-drop-zone img {
   display: block;
   margin-bottom: 10px;
+}
+
+.parrafo-separado {
+  margin-bottom: 1em;
+}
+.lista-vinetas {
+  margin-bottom: 1em;
+  padding-left: 20px;
+}
+.lista-vinetas ul {
+  padding-left: 20px;
 }

@@ -1,16 +1,14 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { PlantillaWordComponent } from './plantilla-word/plantilla-word.component';
+import { PlantillaWordComponent } from './plantilla-word/contrato-adquisicion-bienes.component';
 
 const routes: Routes = [
-
-  { path: '', redirectTo: 'plantilla', pathMatch: 'full' }, // Redirige a 'plantilla' por defecto
-  { path: 'plantilla', component: PlantillaWordComponent }, // Ruta para el componente
-
+  { path: '', redirectTo: 'contrato-adquisicion-bienes', pathMatch: 'full' }, // Ruta por defecto
+  { path: 'contrato-adquisicion-bienes', component: PlantillaWordComponent },
 ];
 
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
+  exports: [RouterModule],
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}
