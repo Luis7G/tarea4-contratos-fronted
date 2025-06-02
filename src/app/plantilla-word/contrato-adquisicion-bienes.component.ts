@@ -1,13 +1,8 @@
 import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
-// Eliminamos FormBuilder, FormGroup, Validators si no se usan directamente aquí para un formulario
-// import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-// jsPDF y html2canvas ya están declarados
-// import { jsPDF } from 'jspdf';
-// import html2canvas from "html2canvas";
-
-import { CommonModule } from '@angular/common'; // Necesario para *ngIf, etc.
-import { FormsModule } from '@angular/forms'; // Necesario para ngModel
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 declare const html2pdf: any;
+import { PdfService } from '../services/pdf.service'; // Importar el servicio
 
 // Interfaz para estructurar los datos del contrato
 export interface ContratoData {
@@ -30,7 +25,9 @@ export interface ContratoData {
     | 'representante_legal'
     | 'apoderado_especial'
     | 'superintendente'
-    | ''; // Nueva variable para el tipo
+    | 'persona_natural'
+    | 'persona_juridica'
+    | ''; // Updated type
   representanteLegalContratista: string; // <--- REVERT to single string for the name
 
   // Cláusula Primera
@@ -68,7 +65,6 @@ export interface ContratoData {
   // Cláusula Séptima
   requiereGarantiaTecnica: boolean; // Solo para contratos ≤ 50k sin anticipo
   requiereGarantiaBuenUsoAnticipo: boolean; // Solo para contratos ≤ 20k con anticipo
-  tipoGarantiaTecnica: 'del_fabricante' | 'incondicional_irrevocable' | '';
   plazoGarantiaTecnica: string;
   clausulaSeptimaGarantiasOpcion: string;
   clausulaSeptimaTextoGeneral: string;
@@ -80,11 +76,17 @@ export interface ContratoData {
     | 'puesto_en_funcionamiento'
     | ''; // Nueva variable para el estado de los bienes
   clausulaOctavaCapacitacion: string;
-  clausulaOctavaPeriodoPlazo: string;
+  clausulaOctavaPeriodoNumero: number | null; // Nuevo campo numérico
+  clausulaOctavaPeriodoUnidad: 'dias' | 'meses' | 'años' | ''; // Nuevo campo para unidad
+  clausulaOctavaPeriodoTexto: string; // Campo calculado para el texto en letras
+  // Remover: clausulaOctavaPeriodoPlazo: string;
   clausulaOctavaInicioPlazo: string;
 
   // Cláusula Décima
   clausulaDecimaPorcentajeMulta: string;
+
+  diasIncumplimientoContratante: number | null;
+  diasSuspensionContratista: number | null;
 
   // Cláusula Vigésima Tercera - Comunicaciones
   contratanteCorreoComunicaciones: string;
@@ -106,7 +108,6 @@ export interface ContratoData {
 
   // Anexo 1 - Forma de Pago (campos específicos para cada opción)
   anexo1ConAnticipoPorcentaje: string;
-  anexo1ConAnticipoValorRestantePorcentaje: string;
   anexo1ConAnticipoValorRestanteUSD: string;
   anexo1ConAnticipoPeriodoFacturas: string;
   anexo1SinAnticipoVariosPagosPeriodo: string;
@@ -126,10 +127,11 @@ export interface ContratoData {
   styleUrls: ['./contrato-adquisicion-bienes.component.css'],
 })
 export class PlantillaWordComponent implements AfterViewInit {
-  @ViewChild('print', { static: false }) contentRef!: ElementRef; // Cambiado a 'print' si ese es el ID del div a imprimir
+  // @ViewChild('contentRef', { static: false }) contentRef!: ElementRef;
+  @ViewChild('contractContent', { static: false }) contentRef!: ElementRef; // Cambiar a 'contractContent'
   @ViewChild('fileDropRef', { static: false }) fileDropRef!: ElementRef; // Para el input de archivo
   @ViewChild('documentoRespaldoRef', { static: false })
-  documentoRespaldoRef!: ElementRef; // Para el input del documento de respaldo
+  documentoRespaldoRef!: ElementRef;
 
   // Datos del contrato que se mostrarán en la plantilla
   contratoData: ContratoData;
@@ -140,7 +142,10 @@ export class PlantillaWordComponent implements AfterViewInit {
   selectedDocumentFileName: string | null = null;
   previewDocumentUrl: string | ArrayBuffer | null = null;
 
-  constructor() {
+  uploadedImageUrl: string | null = null;
+  tempFileName: string | null = null;
+
+  constructor(private pdfService: PdfService) {
     this.contratoData = {
       // Nuevos campos para representante contratante
       tipoRepresentanteContratante: '',
@@ -161,6 +166,8 @@ export class PlantillaWordComponent implements AfterViewInit {
       clausulaCuartaCapacitacionNumeroServidores: '',
       clausulaCuartaCapacitacionLugar: '',
       clausulaCuartaCapacitacionPersonalCertificado: '',
+      diasIncumplimientoContratante: null,
+      diasSuspensionContratista: null,
       clausulaQuintaPrecioTotalLetrasNumeros: null,
       ofertaContemplaSoporteTecnico: false,
       capacitacionRequierePersonalCertificado: false,
@@ -168,7 +175,6 @@ export class PlantillaWordComponent implements AfterViewInit {
       clausulaQuintaPrecioTotalLetras: '',
       requiereGarantiaTecnica: false,
       requiereGarantiaBuenUsoAnticipo: false, // Nuevo campo
-      tipoGarantiaTecnica: '',
       plazoGarantiaTecnica: '',
       clausulaSextaFormaPagoOpcion: '',
       clausulaSextaFormaPagoTextoGeneral: '',
@@ -184,7 +190,10 @@ export class PlantillaWordComponent implements AfterViewInit {
       // clausulaOctavaInstaladosFuncionando: 'instalados, puestos en funcionamiento', // Removido
       clausulaOctavaEstadoBienes: '', // Inicializar
       clausulaOctavaCapacitacion: 'la capacitación de ser el caso',
-      clausulaOctavaPeriodoPlazo: '',
+      clausulaOctavaPeriodoNumero: null, // Nuevo
+      clausulaOctavaPeriodoUnidad: '', // Nuevo
+      clausulaOctavaPeriodoTexto: '', // Nuevo
+      // Remover: clausulaOctavaPeriodoPlazo: '',
       clausulaOctavaInicioPlazo: '',
       clausulaDecimaPorcentajeMulta: '',
       contratanteCorreoComunicaciones: '',
@@ -200,7 +209,6 @@ export class PlantillaWordComponent implements AfterViewInit {
       fechaFirmaContratoMes: '',
       fechaFirmaContratoAnio: '',
       anexo1ConAnticipoPorcentaje: '',
-      anexo1ConAnticipoValorRestantePorcentaje: '',
       anexo1ConAnticipoValorRestanteUSD: '',
       anexo1ConAnticipoPeriodoFacturas: '',
       anexo1SinAnticipoVariosPagosPeriodo: '',
@@ -213,12 +221,13 @@ export class PlantillaWordComponent implements AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    // El código original lanzaba un error, lo comento o puedes implementar algo si es necesario.
-    // throw new Error('Method not implemented.');
+    // Verificar que el elemento esté disponible
     if (!this.contentRef) {
       console.warn(
         'ContentRef no está disponible en ngAfterViewInit. Asegúrate de que el elemento #print exista en el HTML.'
       );
+    } else {
+      console.log('ContentRef está disponible:', this.contentRef);
     }
   }
 
@@ -351,14 +360,268 @@ export class PlantillaWordComponent implements AfterViewInit {
       this.contratoData.clausulaSeptimaGarantiasOpcion = '';
       this.contratoData.requiereGarantiaTecnica = false;
       this.contratoData.requiereGarantiaBuenUsoAnticipo = false;
+      this.contratoData.clausulaQuintaPrecioTotalLetras = '';
     } else {
-      // Convertir número a letras (función auxiliar)
+      // Convertir número a letras usando la librería
       this.contratoData.clausulaQuintaPrecioTotalLetras =
         this.convertirNumeroALetras(price);
 
       // Actualizar la opción de garantía
       this.updateGuaranteeOption();
     }
+  }
+
+  onPeriodoChange(): void {
+    const numero = this.contratoData.clausulaOctavaPeriodoNumero;
+    const unidad = this.contratoData.clausulaOctavaPeriodoUnidad;
+
+    if (numero === null || numero <= 0 || !unidad) {
+      this.contratoData.clausulaOctavaPeriodoTexto = '';
+      return;
+    }
+
+    // Convertir número a letras usando el método existente (sin la parte de moneda)
+    const numeroEnLetras = this.convertirNumeroALetrasSimple(numero);
+
+    // Determinar la unidad en singular o plural
+    let unidadTexto = '';
+    if (numero === 1) {
+      switch (unidad) {
+        case 'dias':
+          unidadTexto = 'DÍA';
+          break;
+        case 'meses':
+          unidadTexto = 'MES';
+          break;
+        case 'años':
+          unidadTexto = 'AÑO';
+          break;
+      }
+    } else {
+      switch (unidad) {
+        case 'dias':
+          unidadTexto = 'DÍAS';
+          break;
+        case 'meses':
+          unidadTexto = 'MESES';
+          break;
+        case 'años':
+          unidadTexto = 'AÑOS';
+          break;
+      }
+    }
+
+    this.contratoData.clausulaOctavaPeriodoTexto = `${numeroEnLetras} ${unidadTexto}`;
+  }
+
+  // Método auxiliar para convertir números a letras (sin moneda)
+  private convertirNumeroALetrasSimple(numero: number): string {
+    if (numero === 0) return 'CERO';
+    if (numero < 0)
+      return 'MENOS ' + this.convertirNumeroALetrasSimple(-numero);
+
+    let resultado = '';
+    let numeroOriginal = Math.floor(numero);
+
+    // Millones
+    if (numeroOriginal >= 1000000) {
+      const millones = Math.floor(numeroOriginal / 1000000);
+      resultado +=
+        this.convertirGrupo(millones) +
+        (millones === 1 ? ' MILLÓN ' : ' MILLONES ');
+      numeroOriginal = numeroOriginal % 1000000;
+    }
+
+    // Miles
+    if (numeroOriginal >= 1000) {
+      const miles = Math.floor(numeroOriginal / 1000);
+      if (miles === 1) {
+        resultado += 'MIL ';
+      } else {
+        resultado += this.convertirGrupo(miles) + ' MIL ';
+      }
+      numeroOriginal = numeroOriginal % 1000;
+    }
+
+    // Centenas, decenas y unidades
+    if (numeroOriginal > 0) {
+      resultado += this.convertirGrupo(numeroOriginal);
+    }
+
+    return resultado.trim();
+  }
+
+  private convertirNumeroALetras(numero: number): string {
+    if (numero === 0) return 'CERO DÓLARES DE LOS ESTADOS UNIDOS DE AMÉRICA';
+    if (numero < 0) return 'MENOS ' + this.convertirNumeroALetras(-numero);
+
+    const unidades = [
+      '',
+      'UNO',
+      'DOS',
+      'TRES',
+      'CUATRO',
+      'CINCO',
+      'SEIS',
+      'SIETE',
+      'OCHO',
+      'NUEVE',
+    ];
+    const especiales = [
+      'DIEZ',
+      'ONCE',
+      'DOCE',
+      'TRECE',
+      'CATORCE',
+      'QUINCE',
+      'DIECISÉIS',
+      'DIECISIETE',
+      'DIECIOCHO',
+      'DIECINUEVE',
+    ];
+    const decenas = [
+      '',
+      '',
+      'VEINTE',
+      'TREINTA',
+      'CUARENTA',
+      'CINCUENTA',
+      'SESENTA',
+      'SETENTA',
+      'OCHENTA',
+      'NOVENTA',
+    ];
+    const centenas = [
+      '',
+      'CIENTO',
+      'DOSCIENTOS',
+      'TRESCIENTOS',
+      'CUATROCIENTOS',
+      'QUINIENTOS',
+      'SEISCIENTOS',
+      'SETECIENTOS',
+      'OCHOCIENTOS',
+      'NOVECIENTOS',
+    ];
+
+    let resultado = '';
+    let numeroOriginal = Math.floor(numero);
+
+    // Millones
+    if (numeroOriginal >= 1000000) {
+      const millones = Math.floor(numeroOriginal / 1000000);
+      resultado +=
+        this.convertirGrupo(millones) +
+        (millones === 1 ? ' MILLÓN ' : ' MILLONES ');
+      numeroOriginal = numeroOriginal % 1000000;
+    }
+
+    // Miles
+    if (numeroOriginal >= 1000) {
+      const miles = Math.floor(numeroOriginal / 1000);
+      if (miles === 1) {
+        resultado += 'MIL ';
+      } else {
+        resultado += this.convertirGrupo(miles) + ' MIL ';
+      }
+      numeroOriginal = numeroOriginal % 1000;
+    }
+
+    // Centenas, decenas y unidades
+    if (numeroOriginal > 0) {
+      resultado += this.convertirGrupo(numeroOriginal);
+    }
+
+    // Agregar la moneda
+    const parteEntera = Math.floor(numero);
+    if (parteEntera === 1) {
+      resultado += ' DÓLAR DE LOS ESTADOS UNIDOS DE AMÉRICA';
+    } else {
+      resultado += ' DÓLARES DE LOS ESTADOS UNIDOS DE AMÉRICA';
+    }
+
+    return resultado.trim();
+  }
+
+  private convertirGrupo(numero: number): string {
+    const unidades = [
+      '',
+      'UNO',
+      'DOS',
+      'TRES',
+      'CUATRO',
+      'CINCO',
+      'SEIS',
+      'SIETE',
+      'OCHO',
+      'NUEVE',
+    ];
+    const especiales = [
+      'DIEZ',
+      'ONCE',
+      'DOCE',
+      'TRECE',
+      'CATORCE',
+      'QUINCE',
+      'DIECISÉIS',
+      'DIECISIETE',
+      'DIECIOCHO',
+      'DIECINUEVE',
+    ];
+    const decenas = [
+      '',
+      '',
+      'VEINTE',
+      'TREINTA',
+      'CUARENTA',
+      'CINCUENTA',
+      'SESENTA',
+      'SETENTA',
+      'OCHENTA',
+      'NOVENTA',
+    ];
+    const centenas = [
+      '',
+      'CIENTO',
+      'DOSCIENTOS',
+      'TRESCIENTOS',
+      'CUATROCIENTOS',
+      'QUINIENTOS',
+      'SEISCIENTOS',
+      'SETECIENTOS',
+      'OCHOCIENTOS',
+      'NOVECIENTOS',
+    ];
+
+    let resultado = '';
+
+    // Centenas
+    if (numero >= 100) {
+      const cent = Math.floor(numero / 100);
+      if (numero === 100) {
+        resultado += 'CIEN';
+      } else {
+        resultado += centenas[cent];
+      }
+      numero = numero % 100;
+      if (numero > 0) resultado += ' ';
+    }
+
+    // Decenas y unidades
+    if (numero >= 20) {
+      const dec = Math.floor(numero / 10);
+      const uni = numero % 10;
+      resultado += decenas[dec];
+      if (uni > 0) {
+        resultado += ' Y ' + unidades[uni];
+      }
+    } else if (numero >= 10) {
+      resultado += especiales[numero - 10];
+    } else if (numero > 0) {
+      resultado += unidades[numero];
+    }
+
+    return resultado;
   }
 
   // Métodos auxiliares actualizados
@@ -420,13 +683,12 @@ export class PlantillaWordComponent implements AfterViewInit {
 
   // Método para determinar si la garantía de buen uso del anticipo es obligatoria
   isGarantiaBuenUsoAnticipoObligatoria(): boolean {
-    const price = this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros;
-    const paymentOption = this.contratoData.clausulaSextaFormaPagoOpcion;
+    const precio = this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros;
+    const conAnticipo =
+      this.contratoData.clausulaSextaFormaPagoOpcion === 'con_anticipo';
 
-    if (!price || paymentOption !== 'con_anticipo') return false;
-
-    // Obligatoria si: > 20k CON anticipo
-    return price > 20000;
+    // Garantía obligatoria para contratos > USD 20,000 con anticipo
+    return precio !== null && precio > 20000 && conAnticipo;
   }
 
   onPaymentOptionChange(): void {
@@ -457,102 +719,40 @@ export class PlantillaWordComponent implements AfterViewInit {
   }
 
   shouldIncludeClausulaSegundaPuntoC(): boolean {
-    const price = this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros;
-    const paymentOption = this.contratoData.clausulaSextaFormaPagoOpcion;
+    const precio = this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros;
+    const conAnticipo =
+      this.contratoData.clausulaSextaFormaPagoOpcion === 'con_anticipo';
 
-    if (!price || !paymentOption) return false;
-
-    // Incluir punto c) si:
-    // - Hay anticipo (cualquier monto), O
-    // - Es contrato ≥ 50k (siempre), O
-    // - Es contrato < 50k sin anticipo pero con garantía técnica
-    return (
-      paymentOption === 'con_anticipo' ||
-      price >= 50000 ||
-      (price < 50000 && this.contratoData.requiereGarantiaTecnica === true)
-    );
-  }
-
-  getTipoGarantiaTecnicaTexto(): string {
-    switch (this.contratoData.tipoGarantiaTecnica) {
-      case 'del_fabricante':
-        return 'del fabricante, representante, distribuidor o vendedor autorizado';
-      case 'incondicional_irrevocable':
-        return 'incondicional, irrevocable y de cobro inmediato, o fianza instrumentada en una póliza de seguros, otorgadas, por un banco, institución financiera o compañía de seguros establecidos en el Ecuador, o por intermedio de ellos, por igual valor de los bienes a suministrarse';
-      default:
-        return '[SELECCIONE TIPO DE GARANTÍA]';
-    }
-  }
-
-  // Función auxiliar para convertir números a letras (básica)
-  private convertirNumeroALetras(numero: number): string {
-    // Implementación básica - puedes usar una librería más completa
-    const unidades = [
-      '',
-      'uno',
-      'dos',
-      'tres',
-      'cuatro',
-      'cinco',
-      'seis',
-      'siete',
-      'ocho',
-      'nueve',
-    ];
-    const decenas = [
-      '',
-      '',
-      'veinte',
-      'treinta',
-      'cuarenta',
-      'cincuenta',
-      'sesenta',
-      'setenta',
-      'ochenta',
-      'noventa',
-    ];
-    const centenas = [
-      '',
-      'ciento',
-      'doscientos',
-      'trescientos',
-      'cuatrocientos',
-      'quinientos',
-      'seiscientos',
-      'setecientos',
-      'ochocientos',
-      'novecientos',
-    ];
-
-    if (numero === 0) return 'cero';
-    if (numero < 0) return 'menos ' + this.convertirNumeroALetras(-numero);
-
-    // Implementación simplificada para números hasta 999,999
-    if (numero < 10) return unidades[numero];
-    if (numero < 100) {
-      if (numero < 20) {
-        const especiales = [
-          'diez',
-          'once',
-          'doce',
-          'trece',
-          'catorce',
-          'quince',
-          'dieciséis',
-          'diecisiete',
-          'dieciocho',
-          'diecinueve',
-        ];
-        return especiales[numero - 10];
-      }
-      const dec = Math.floor(numero / 10);
-      const uni = numero % 10;
-      return decenas[dec] + (uni > 0 ? ' y ' + unidades[uni] : '');
+    if (precio === null || precio <= 0) {
+      return false; // Sin precio definido, no incluir
     }
 
-    // Para números más grandes, retornar una representación básica
-    return numero.toLocaleString('es-ES').replace(/,/g, ' ');
+    // REGLA: Incluir punto c) EXCEPTO cuando:
+    // - Contrato < 50k
+    // - Sin anticipo
+    // - Solo se aplica fondo de garantía del 5%
+    // - No se requieren garantías adicionales (buen uso anticipo, fiel cumplimiento)
+
+    // Para contratos >= 50k: SIEMPRE incluir (requieren garantía de fiel cumplimiento + técnica)
+    if (precio >= 50000) {
+      return true;
+    }
+
+    // Para contratos < 50k CON anticipo: SIEMPRE incluir (requieren garantía de buen uso del anticipo + técnica)
+    if (precio < 50000 && conAnticipo) {
+      return true;
+    }
+
+    // Para contratos < 50k SIN anticipo: NO incluir
+    // (solo se aplica fondo de garantía del 5% + garantía técnica que se maneja internamente)
+    if (precio < 50000 && !conAnticipo) {
+      return false;
+    }
+
+    return false;
   }
+
+  // Método para simplificar la visualización del texto de garantía técnica
 
   private updateGuaranteeOption(): void {
     const price = this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros;
@@ -661,60 +861,61 @@ export class PlantillaWordComponent implements AfterViewInit {
 
   async generatePDF() {
     try {
+      console.log('Generando PDF con backend...');
+
       if (!this.contentRef?.nativeElement) {
-        throw new Error('El elemento #print para el PDF no está disponible.');
+        console.error('Elemento de contenido no encontrado');
+        return;
       }
 
-      const contentElement = this.contentRef.nativeElement;
+      // Obtén el HTML tal como lo tienes en el frontend
+      const htmlContent = this.contentRef.nativeElement.innerHTML;
 
-      // Limpiar saltos de página previos por si se genera múltiples veces
-      const existingPageBreaks = contentElement.querySelectorAll(
-        '.page-break-placeholder'
-      );
-      existingPageBreaks.forEach((pb: { remove: () => any }) => pb.remove());
-
-      // Clonar el contenido para no modificar el original visible
-      const clone = contentElement.cloneNode(true) as HTMLElement;
-      document.body.appendChild(clone); // Añadir clon al DOM para que html2canvas lo procese correctamente (temporalmente)
-      clone.style.position = 'absolute';
-      clone.style.left = '-9999px'; // Moverlo fuera de la vista
-      clone.style.width = contentElement.offsetWidth + 'px'; // Asegurar el mismo ancho
-
-      // Ajustar contenido en el clon
-      this.adjustContentForPDF(clone);
-
-      const options = {
-        margin: [10, 10, 10, 10], // Margen en mm [arriba, izquierda, abajo, derecha] o [vertical, horizontal]
-        filename: 'contrato_adquisicion_bienes.pdf',
-        image: { type: 'jpeg', quality: 0.98 }, // Calidad de imagen
-        html2canvas: {
-          scale: 2, // Escala para mejor resolución
-          useCORS: true, // Para imágenes de otros dominios
-          logging: true, // Para depuración
-          scrollX: 0, // Evitar desplazamiento horizontal
-          scrollY: -window.scrollY, // Compensar el scroll de la página principal
-          windowWidth: clone.scrollWidth,
-          windowHeight: clone.scrollHeight,
+      this.pdfService.generatePdfFromHtml(htmlContent).subscribe({
+        next: (pdfBlob: Blob) => {
+          const url = window.URL.createObjectURL(pdfBlob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `contrato_${
+            this.contratoData.nombreContratista || 'documento'
+          }.pdf`;
+          link.click();
+          window.URL.revokeObjectURL(url);
+          console.log('PDF generado exitosamente');
         },
-        jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'portrait',
+        error: (error) => {
+          console.error('Error generando PDF:', error);
+          alert('Error al generar el PDF');
         },
-        pagebreak: { mode: ['css', 'avoid-all'] }, // Modos de salto de página
-      };
-
-      await html2pdf().from(clone).set(options).save();
-      document.body.removeChild(clone); // Eliminar el clon del DOM
-      console.log('PDF generado correctamente.');
+      });
     } catch (error) {
-      console.error('Error al generar el PDF:', error);
-      const cloneIfExists = document.querySelector(
-        'body > div[style*="left: -9999px"]'
+      console.error('Error:', error);
+    }
+  }
+
+  checkElement() {
+    console.log('=== DEBUG INFO ===');
+    console.log('ViewChild contentRef:', this.contentRef);
+    console.log('ViewChild nativeElement:', this.contentRef?.nativeElement);
+    console.log(
+      'getElementById contract-content:',
+      document.getElementById('contract-content')
+    );
+    console.log(
+      'querySelector .contract-content-wrapper:',
+      document.querySelector('.contract-content-wrapper')
+    );
+
+    const contractElement = document.getElementById('contract-content');
+    if (contractElement) {
+      console.log(
+        'Altura del elemento del contrato:',
+        contractElement.offsetHeight
       );
-      if (cloneIfExists) {
-        document.body.removeChild(cloneIfExists); // Asegurarse de remover el clon en caso de error
-      }
+      console.log(
+        'Ancho del elemento del contrato:',
+        contractElement.offsetWidth
+      );
     }
   }
 
@@ -746,16 +947,16 @@ export class PlantillaWordComponent implements AfterViewInit {
   }
 
   private handleFile(file: File): void {
-    const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
+    const maxSizeInBytes = 3 * 1024 * 1024; // 3MB
     if (file.size > maxSizeInBytes) {
-      alert('La imagen excede el tamaño máximo permitido de 2MB.');
+      alert('La imagen excede el tamaño máximo permitido de 3MB.');
       this.clearImageSelection();
       return;
     }
-    if (!file.type.startsWith('image/')) {
-      alert(
-        'Por favor, seleccione un archivo de imagen válido (JPEG, PNG, GIF).'
-      );
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(file.type.toLowerCase())) {
+      alert('Tipo de archivo no válido. Solo se permiten: JPG, PNG, GIF');
       this.clearImageSelection();
       return;
     }
@@ -763,18 +964,80 @@ export class PlantillaWordComponent implements AfterViewInit {
     this.contratoData.clausulaQuintaImagenTablaCantidades = file;
     this.selectedFileName = file.name;
 
-    // Preview
+    // Preview local inmediato
     const reader = new FileReader();
-    reader.onload = (e) => (this.previewImageUrl = e.target?.result || null);
+    reader.onload = (e) => {
+      this.previewImageUrl = (e.target?.result as string) || null;
+    };
     reader.readAsDataURL(file);
+
+    // Subir al backend como archivo temporal
+    console.log('Subiendo imagen temporal al servidor...');
+    this.pdfService.uploadTempImage(file).subscribe({
+      next: (response) => {
+        this.uploadedImageUrl = response.imageUrl;
+        this.tempFileName = response.fileName;
+        console.log('✅ Imagen subida exitosamente:', response);
+        console.log(`📊 Tamaño: ${(response.size / 1024).toFixed(1)}KB`);
+        console.log(`⏰ Expira en: ${response.expiresIn}`);
+      },
+      error: (error) => {
+        console.error('❌ Error subiendo imagen:', error);
+        alert(
+          'Error al subir la imagen: ' +
+            (error.error?.message || 'Error desconocido')
+        );
+      },
+    });
   }
 
   clearImageSelection(): void {
+    // Limpiar imagen temporal del servidor si existe
+    if (this.tempFileName) {
+      this.pdfService.cleanupTempImage(this.tempFileName).subscribe({
+        next: (response) => {
+          console.log('🗑️ Imagen temporal eliminada:', response);
+        },
+        error: (error) => {
+          console.warn('⚠️ No se pudo eliminar imagen temporal:', error);
+        },
+      });
+    }
+
+    // Limpiar variables locales
     this.contratoData.clausulaQuintaImagenTablaCantidades = null;
     this.selectedFileName = null;
     this.previewImageUrl = null;
+    this.uploadedImageUrl = null;
+    this.tempFileName = null;
+
     if (this.fileDropRef?.nativeElement) {
-      this.fileDropRef.nativeElement.value = ''; // Resetea el input file
+      this.fileDropRef.nativeElement.value = '';
     }
+  }
+
+  // Método opcional para limpiar al salir del componente
+  ngOnDestroy(): void {
+    if (this.tempFileName) {
+      this.pdfService.cleanupTempImage(this.tempFileName).subscribe();
+    }
+  }
+
+  calcularPorcentajeRestante(): string {
+    if (!this.contratoData.anexo1ConAnticipoPorcentaje) {
+      return '[% RESTANTE]';
+    }
+
+    // Extraer el número del porcentaje (ej: "30%" -> 30)
+    const porcentajeAnticipoStr =
+      this.contratoData.anexo1ConAnticipoPorcentaje.replace('%', '');
+    const porcentajeAnticipo = parseFloat(porcentajeAnticipoStr);
+
+    if (isNaN(porcentajeAnticipo)) {
+      return '[% RESTANTE]';
+    }
+
+    const porcentajeRestante = 100 - porcentajeAnticipo;
+    return `${porcentajeRestante}%`;
   }
 }

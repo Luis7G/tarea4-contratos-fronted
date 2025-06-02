@@ -1,49 +1,115 @@
 /* General page structure and centering */
 #print {
-  max-width: 850px; /* Adjust as needed for your preferred width */
-  margin: 30px auto; /* Centers the content on the page */
-  padding: 20px; /* Adds some space inside the bordered area */
-  background: #fff; /* Ensures a white background for the document */
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.15); /* Adds a subtle shadow for a "document" feel */
-  border: 1px solid #ccc; /* Optional: adds a light border */
+  max-width: 850px;
+  margin: 30px auto;
+  padding: 20px;
+  background: #fff;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
+  border: 1px solid #ccc;
 }
 
-/* Print specific styles */
+/* Encabezado de página */
+.page-header {
+  margin-bottom: 20px;
+}
+
+/* Estilos específicos para impresión */
 @media print {
+  /* Configuración de página más simple */
   @page {
-    margin: 50px; /* Standard print margins */
+    margin: 15mm;
+    size: A4;
   }
 
+  /* Ocultar configuración en impresión */
+  .configuration-section {
+    display: none !important;
+  }
+
+  /* Ajustar contenedor principal */
   body,
   #print {
     margin: 0;
-    padding: 0;
+    padding: 15mm;
     box-shadow: none;
     border: none;
-    max-width: none; /* Allow full width for printing */
+    max-width: none;
     background: transparent;
   }
 
-  .print-header {
-    height: auto; /* Adjust height automatically for content */
-    text-align: center;
-    padding-bottom: 20px; /* Space below header before content starts */
+  /* Encabezado simple sin position running */
+  .page-header {
+    margin: 0 0 20px 0;
+    padding: 0;
   }
 
+  /* Nueva clase para el wrapper del contrato */
+  .contract-content-wrapper {
+    max-width: 850px;
+    margin: 30px auto;
+    padding: 20px;
+    background: #fff;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
+    border: 1px solid #ccc;
+  }
+
+  /* Contenido principal */
   .contract-preview {
-    padding: 0; /* Remove padding for print if @page margins are sufficient */
+    padding: 0;
     font-family: "Bookman Old Style", serif;
     font-size: 12pt;
-    line-height: 1.6; /* Professional line spacing */
+    line-height: 1.6;
     text-align: justify;
   }
 
-  thead {
-    display: table-header-group; /* Ensures header repeats on each printed page */
+  /* Tabla del encabezado para impresión */
+  .contract-header-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10pt;
+    border: 1px solid black;
+    margin-bottom: 20px;
   }
 
-  tfoot {
-    display: table-footer-group;
+  .contract-header-table td {
+    padding: 2px 5px;
+    vertical-align: middle;
+    border: 1px solid black;
+  }
+
+  .logo-img {
+    max-width: 100%;
+    height: 50px;
+  }
+
+  /* Evitar cortes en tablas */
+  .tabla-cantidades-img {
+    page-break-inside: avoid;
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Forzar que el contenido sea visible */
+  .contract-paragraph {
+    page-break-inside: avoid;
+    orphans: 2;
+    widows: 2;
+  }
+
+  @media print {
+    .page-header-repeat {
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: white;
+    }
+
+    .contract-preview {
+      margin-top: 120px; /* Espacio para el header fijo */
+    }
   }
 }
 
@@ -53,15 +119,15 @@
   text-align: left;
   font-family: Arial, sans-serif;
   table-layout: fixed;
-  width: 100%; /* Takes full width of its container (#print) */
-  margin: 0 auto 20px auto; /* Center table and add margin below */
+  width: 100%;
+  margin: 0 auto 20px auto;
   border: 1px solid black;
 }
 
 .contract-header-table td {
-  padding: 2px 5px; /* Consistent padding */
+  padding: 2px 5px;
   vertical-align: middle;
-  border: 1px solid black; /* Ensure all cells have borders if the table has one */
+  border: 1px solid black;
 }
 
 .header-cell-logo {
@@ -69,12 +135,12 @@
   text-align: center;
   vertical-align: middle;
   padding: 5px;
-  height: auto; /* Auto height based on content */
+  height: auto;
 }
 
 .logo-img {
   max-width: 100%;
-  height: 70px; /* Adjusted logo height */
+  height: 70px;
   display: block;
   margin-left: auto;
   margin-right: auto;
@@ -84,14 +150,14 @@
   width: 40%;
   text-align: center;
   vertical-align: middle;
-  font-size: 16px; /* Adjusted for better balance */
+  font-size: 16px;
   font-weight: bold;
   padding: 5px;
   line-height: 1.2;
 }
 
 .header-cell-info {
-  font-size: 10pt; /* Using points for consistency */
+  font-size: 10pt;
   padding: 2px 5px;
   height: auto;
   vertical-align: middle;
@@ -99,37 +165,35 @@
 }
 
 .header-cell-detail {
-  font-size: 10pt; /* Using points for consistency */
+  font-size: 10pt;
   padding: 2px 5px;
   vertical-align: middle;
   text-align: left;
 }
 
 .contract-preview {
-  padding: 20px; /* Padding for the main content area on screen */
+  padding: 20px;
   text-align: justify;
   font-family: "Bookman Old Style", serif;
-  font-size: 12pt; /* Standard document font size */
-  line-height: 1.6; /* Improved line spacing for readability */
+  font-size: 12pt;
+  line-height: 1.6;
 }
 
 .contract-paragraph {
-  margin: 0 0 1em 0; /* Use em for spacing relative to font size */
-  /* Font size and line height inherited from .contract-preview */
+  margin: 0 0 1em 0;
 }
 
 .contract-paragraph strong {
-  font-weight: bold; /* Ensures strong tags are bold */
+  font-weight: bold;
 }
 
-/* Utility class for placeholders if needed, though <strong> should suffice */
 .placeholder-text {
   font-style: italic;
   color: #555;
 }
 
 .form-container {
-  margin-bottom: 30px; /* Espacio entre el formulario y la vista previa del contrato */
+  margin-bottom: 30px;
   padding: 15px;
   border: 1px solid #e0e0e0;
   border-radius: 5px;
@@ -154,6 +218,7 @@
   color: #337ab7;
   font-size: 1.2em;
 }
+
 .form-section h4 {
   margin-top: 10px;
   margin-bottom: 10px;
@@ -171,10 +236,10 @@
 
 .form-section input[type="text"],
 .form-section input[type="email"],
-.form-section input[type="number"], /* Si usas number para algunos campos */
+.form-section input[type="number"],
 .form-section select,
 .form-section textarea {
-  width: calc(100% - 22px); /* Ajustar por padding y borde */
+  width: calc(100% - 22px);
   padding: 8px 10px;
   margin-top: 3px;
   border: 1px solid #ccc;
@@ -190,20 +255,8 @@
 }
 
 .form-section select {
-  width: 100%; /* Selects a menudo se ven mejor al 100% */
+  width: 100%;
 }
-
-/* Estilos para los contenedores de opciones condicionales */
-.form-section > div[style*="display: block;"], /* Para *ngIf que se muestran */
-.form-section > div[ngif] {
-  /* Otra forma de apuntar a los *ngIf */
-  margin-top: 10px;
-  padding: 10px;
-  background-color: #f0f0f0;
-  border-left: 3px solid #337ab7;
-}
-
-/* Styles for Image Drop Zone */
 
 .image-drop-zone {
   border: 2px dashed #ccc;
@@ -213,7 +266,7 @@
   cursor: pointer;
   background-color: #f9f9f9;
   margin-bottom: 15px;
-  min-height: 100px; /* Ajusta según necesidad */
+  min-height: 100px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -233,10 +286,151 @@
 .parrafo-separado {
   margin-bottom: 1em;
 }
+
 .lista-vinetas {
   margin-bottom: 1em;
   padding-left: 20px;
 }
+
 .lista-vinetas ul {
   padding-left: 20px;
+}
+
+/* Estilos para la sección de configuración */
+.configuration-section {
+  background-color: #f8f9fa;
+  padding: 20px;
+  margin-bottom: 30px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.config-box {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.config-box h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #2c5aa0;
+  font-size: 1.2em;
+  border-bottom: 2px solid #2c5aa0;
+  padding-bottom: 8px;
+}
+
+.config-box h4 {
+  margin: 15px 0 10px 0;
+  color: #555;
+  font-size: 1.1em;
+}
+
+.config-box label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  font-size: 0.95em;
+  color: #444;
+}
+
+.config-box input[type="text"],
+.config-box input[type="email"],
+.config-box input[type="number"],
+.config-box select,
+.config-box textarea {
+  width: 100%;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 0.95em;
+  font-family: Arial, sans-serif;
+}
+
+.config-box textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* Estilos para la imagen de tabla en el contrato - SIN BORDER-LEFT */
+.tabla-cantidades-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 15px 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Estilos para impresión - ocultar la configuración */
+@media print {
+  .configuration-section {
+    display: none !important;
+  }
+
+  /* Ajustar contenedor principal */
+  body,
+  .contract-content-wrapper {
+    margin: 0;
+    padding: 15mm;
+    box-shadow: none;
+    border: none;
+    max-width: none;
+    background: transparent;
+  }
+
+  .tabla-cantidades-container {
+    background-color: transparent;
+    border: none;
+    padding: 10px 0;
+  }
+
+  .tabla-cantidades-img {
+    box-shadow: none;
+  }
+}
+
+/* Mejorar la tabla del header para PDF */
+.page-header-repeat .contract-header-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 2px solid black;
+  background: white;
+}
+
+.page-header-repeat .contract-header-table td {
+  padding: 5px;
+  border: 1px solid black;
+  vertical-align: middle;
+  font-size: 9pt;
+}
+
+.page-header-repeat .header-cell-title {
+  text-align: center;
+  font-weight: bold;
+  font-size: 12pt;
+}
+
+.page-header-repeat .header-cell-logo {
+  text-align: center;
+  width: 15%;
+}
+
+.page-header-repeat .logo-img {
+  max-width: 60px;
+  height: auto;
+}
+
+/* Asegurar que el header se muestre en PDF pero se oculte en pantalla si quieres */
+@media screen {
+  .page-header-repeat {
+    /* Mantener visible en pantalla para preview */
+    display: block;
+  }
 }

@@ -1,1271 +1,1530 @@
+<!-- SECCIÓN DE CONFIGURACIÓN DE CAMPOS -->
+<div class="configuration-section">
+  <h2 style="color: #2c5aa0; margin-bottom: 20px;">Configuración del Contrato</h2>
+
+  <!-- Configuración de Representante Contratante -->
+  <div class="config-box">
+    <h3>1. Representante de LA CONTRATANTE</h3>
+    <label>Tipo de representante:</label>
+    <select [(ngModel)]="contratoData.tipoRepresentanteContratante"
+      (ngModelChange)="onTipoRepresentanteContratanteChange()" style="width: 100%; margin-bottom: 10px;">
+      <option value="">Seleccione representante</option>
+      <option value="gerente_general">Gerente General</option>
+      <option value="apoderado_especial">Apoderado Especial</option>
+      <option value="superintendente">Superintendente del Proyecto</option>
+    </select>
+
+    <div *ngIf="contratoData.tipoRepresentanteContratante === 'apoderado_especial'" style="margin: 10px 0;">
+      <label>Seleccione el Apoderado Especial:</label>
+      <select [(ngModel)]="contratoData.apoderadoEspecialSeleccionado" style="width: 100%;">
+        <option value="">Seleccione apoderado</option>
+        <option value="damian_molina">Damián Oswaldo Molina Bernal</option>
+        <option value="roberto_alomoto">Roberto Jaime Alomoto Landeta</option>
+      </select>
+    </div>
+
+    <div *ngIf="contratoData.tipoRepresentanteContratante === 'superintendente'" style="margin: 10px 0;">
+      <label>Nombre del Proyecto:</label>
+      <input type="text" [(ngModel)]="contratoData.nombreProyectoSuperintendente"
+        placeholder="Ingrese el nombre del proyecto" style="width: 100%; margin-bottom: 10px;">
+
+      <label>Nombre del Superintendente:</label>
+      <input type="text" [(ngModel)]="contratoData.nombreSuperintendente"
+        placeholder="Ingrese el nombre del superintendente" style="width: 100%;">
+    </div>
+  </div>
+
+  <!-- Configuración de Contratista -->
+  <div class="config-box">
+    <h3>2. Datos del CONTRATISTA</h3>
+    <label>Nombre del Contratista:</label>
+    <input type="text" [(ngModel)]="contratoData.nombreContratista" placeholder="Nombre completo del contratista"
+      style="width: 100%; margin-bottom: 10px;">
+
+    <label>RUC del Contratista:</label>
+    <input type="text" [(ngModel)]="contratoData.rucContratista" placeholder="Número de RUC"
+      style="width: 100%; margin-bottom: 10px;">
+
+    <label>Tipo de Contratista:</label>
+    <select [(ngModel)]="contratoData.tipoRepresentanteContratista" style="width: 100%; margin-bottom: 10px;">
+      <option value="">Seleccione tipo</option>
+      <option value="persona_natural">Persona Natural</option>
+      <option value="persona_juridica">Persona Jurídica</option>
+    </select>
+
+    <div *ngIf="contratoData.tipoRepresentanteContratista === 'persona_juridica'">
+      <label>Representante Legal, apoderado o procurador común:</label>
+      <input type="text" [(ngModel)]="contratoData.representanteLegalContratista"
+        placeholder="Nombre del representante legal" style="width: 100%;">
+    </div>
+  </div>
+
+  <!-- Configuración de Cláusula Primera -->
+  <div class="config-box">
+    <h3>3. Cláusula Primera - Antecedentes</h3>
+    <label>Antecedentes del contrato:</label>
+    <textarea [(ngModel)]="contratoData.clausulaPrimeraAntecedentes"
+      placeholder="Describa los antecedentes que dieron origen a este contrato"
+      style="width: 100%; min-height: 80px;"></textarea>
+  </div>
+
+  <!-- Configuración de Cláusula Cuarta -->
+  <div class="config-box">
+    <h3>4. Cláusula Cuarta - Objeto del Contrato y Obligaciones Adicionales</h3>
+    <label>Descripción detallada de los bienes:</label>
+    <textarea [(ngModel)]="contratoData.clausulaCuartaDescripcionBienes"
+      placeholder="Describa con precisión los bienes a suministrar, instalar y entregar (ej: equipos de cómputo, software, maquinaria, etc.)"
+      style="width: 100%; min-height: 100px; margin-bottom: 10px;"></textarea>
+
+    <label>Lugar de entrega o sitio:</label>
+    <input type="text" [(ngModel)]="contratoData.clausulaCuartaLugarEntrega"
+      placeholder="Especifique el lugar donde se entregarán los bienes (ej: oficinas de la contratante, bodega, dirección específica, etc.)"
+      style="width: 100%;">
+
+    <label style="display: block; margin-bottom: 10px;">
+      <input type="checkbox" [(ngModel)]="contratoData.ofertaContemplaSoporteTecnico" style="margin-right: 5px;">
+      ¿La oferta contempla soporte técnico, mantenimiento y capacitación?
+    </label>
+
+    <div *ngIf="contratoData.ofertaContemplaSoporteTecnico" style="margin-left: 20px;">
+      <label>Lapso de soporte técnico:</label>
+      <input type="text" [(ngModel)]="contratoData.clausulaCuartaLapsoSoporte"
+        placeholder="Ejemplo: 12 meses, 2 años, etc." style="width: 100%; margin-bottom: 10px;">
+
+      <label>Número de servidores para capacitación:</label>
+      <input type="text" [(ngModel)]="contratoData.clausulaCuartaCapacitacionNumeroServidores" placeholder="Ejemplo: 5"
+        style="width: 100%; margin-bottom: 10px;">
+
+      <label style="display: block; margin-bottom: 10px;">
+        <input type="checkbox" [(ngModel)]="contratoData.capacitacionRequierePersonalCertificado"
+          style="margin-right: 5px;">
+        ¿La capacitación requiere personal certificado por el fabricante y se realizará en las instalaciones de la
+        entidad contratante?
+      </label>
+    </div>
+  </div>
+
+  <!-- Configuración de Cláusula Quinta -->
+  <div class="config-box">
+    <h3>5. Cláusula Quinta - Precio del Contrato</h3>
+    <label>Precio total del contrato (USD):</label>
+    <input type="number" [(ngModel)]="contratoData.clausulaQuintaPrecioTotalLetrasNumeros"
+      (ngModelChange)="onPriceChange()" placeholder="Ingrese el precio total en números"
+      style="width: 100%; margin-bottom: 10px;"
+      [style.border-color]="!contratoData.clausulaQuintaPrecioTotalLetrasNumeros || contratoData.clausulaQuintaPrecioTotalLetrasNumeros <= 0 ? 'red' : null">
+
+    <label>Tabla de Cantidades y Precios (Imagen - Máx 2MB):</label>
+    <div class="image-drop-zone" (drop)="onFileDropped($event)" (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)" (click)="fileDropRef.click()">
+      <input type="file" #fileDropRef style="display: none;" (change)="onFileSelected($event)" accept="image/*">
+      <span *ngIf="!previewImageUrl">Arrastre y suelte una imagen aquí o haga clic para seleccionar.</span>
+      <img *ngIf="previewImageUrl" [src]="previewImageUrl" alt="Vista previa de tabla"
+        style="max-width: 100%; max-height: 200px; margin-top: 10px;">
+      <span *ngIf="selectedFileName" style="display: block; margin-top: 5px;">
+        Archivo: {{ selectedFileName }}
+        <button type="button" (click)="clearImageSelection(); $event.stopPropagation();"
+          style="margin-left: 10px; font-size: 0.8em;">Quitar</button>
+      </span>
+    </div>
+  </div>
+
+  <!-- Configuración de Cláusula Sexta - Forma de Pago y Garantías -->
+  <div class="config-box">
+    <h3>6. Cláusula Sexta - Forma de Pago y Garantías</h3>
+
+    <!-- Forma de Pago -->
+    <h4>Forma de Pago</h4>
+    <label>Seleccione la forma de pago:</label>
+    <select [(ngModel)]="contratoData.clausulaSextaFormaPagoOpcion" (ngModelChange)="onPaymentOptionChange()"
+      style="width: 100%; margin-bottom: 15px;">
+      <option value="">Seleccione una opción</option>
+      <option value="con_anticipo">Con Anticipo</option>
+      <option value="sin_anticipo_un_pago">Sin Anticipo - Un Pago</option>
+      <option value="sin_anticipo_varios_pagos">Sin Anticipo - Varios Pagos</option>
+    </select>
+
+    <!-- Campos específicos para pago CON ANTICIPO -->
+    <div *ngIf="contratoData.clausulaSextaFormaPagoOpcion === 'con_anticipo'"
+      style="background-color: #f0f8ff; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+      <h5 style="margin-top: 0; color: #2c5aa0;">Configuración de Anticipo</h5>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+        <div>
+          <label>Porcentaje de Anticipo (%):</label>
+          <input type="text" [(ngModel)]="contratoData.anexo1ConAnticipoPorcentaje" placeholder="Ej: 30%"
+            style="width: 100%;">
+        </div>
+        <div>
+          <label>Valor Restante (USD):</label>
+          <input type="text" [(ngModel)]="contratoData.anexo1ConAnticipoValorRestanteUSD" placeholder="Valor en USD"
+            style="width: 100%;">
+        </div>
+      </div>
+      <div>
+        <label>Período de Facturas:</label>
+        <input type="text" [(ngModel)]="contratoData.anexo1ConAnticipoPeriodoFacturas"
+          placeholder="Ej: mensuales, quincenales" style="width: 100%;">
+      </div>
+    </div>
+
+    <!-- Campos específicos para pago SIN ANTICIPO - VARIOS PAGOS -->
+    <div *ngIf="contratoData.clausulaSextaFormaPagoOpcion === 'sin_anticipo_varios_pagos'"
+      style="background-color: #f0f8ff; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+      <h5 style="margin-top: 0; color: #2c5aa0;">Configuración de Varios Pagos</h5>
+      <label>Período de Facturas:</label>
+      <input type="text" [(ngModel)]="contratoData.anexo1SinAnticipoVariosPagosPeriodo"
+        placeholder="Ej: mensuales, por entregables, etc." style="width: 100%;">
+    </div>
+
+    <!-- Configuración de Garantías -->
+    <hr style="margin: 20px 0; border: 1px solid #ddd;">
+    <h4>Garantías del Contrato</h4>
+
+    <!-- Mostrar información sobre las garantías basada en el precio y forma de pago -->
+    <div *ngIf="contratoData.clausulaQuintaPrecioTotalLetrasNumeros"
+      style="background-color: #f9f9f9; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+      <p style="margin: 5px 0; font-size: 0.9em; color: #666;">
+        <strong>Tipo de contrato detectado:</strong>
+        <span *ngIf="isContratoMenorA50k()">Menor a USD 50,000</span>
+        <span *ngIf="isContratoMayorIgualA50k()">Mayor o igual a USD 50,000</span>
+        <span *ngIf="contratoData.clausulaSextaFormaPagoOpcion === 'con_anticipo'"> - Con Anticipo</span>
+        <span
+          *ngIf="contratoData.clausulaSextaFormaPagoOpcion !== 'con_anticipo' && contratoData.clausulaSextaFormaPagoOpcion">
+          - Sin Anticipo</span>
+      </p>
+    </div>
+
+    <!-- Garantía Técnica (Siempre presente) -->
+    <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+      <h5 style="margin-top: 0; color: #856404;">Garantía Técnica (Obligatoria)</h5>
+      <p style="color: #856404; margin-bottom: 15px; font-size: 0.9em;">
+        La garantía técnica es obligatoria para todos los contratos de bienes.
+      </p>
+
+      <label>Plazo de la Garantía Técnica:</label>
+      <input type="text" [(ngModel)]="contratoData.plazoGarantiaTecnica" placeholder="Ej: 12 meses, 2 años, etc."
+        style="width: 100%;">
+    </div>
+
+    <!-- Garantía de Buen Uso del Anticipo (Solo para contratos > USD 20,000 con anticipo) -->
+    <div *ngIf="isGarantiaBuenUsoAnticipoObligatoria()"
+      style="background-color: #fff3cd; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+      <h5 style="margin-top: 0; color: #856404;">Garantía de Buen Uso del Anticipo (Obligatoria)</h5>
+      <p style="color: #856404; margin-bottom: 15px; font-size: 0.9em;">
+        Para contratos > USD 20,000 con anticipo, esta garantía es obligatoria.
+      </p>
+    </div>
+
+    <!-- Información sobre fondo de garantía vs garantía de fiel cumplimiento -->
+    <div style="background-color: #d1ecf1; padding: 15px; border-radius: 5px; color: #0c5460;">
+      <p style="margin: 0; font-size: 0.9em;">
+        <strong>Información adicional:</strong>
+        <span *ngIf="isContratoMenorA50k()">
+          Se aplicará Fondo de Garantía del 5% (retención en cada pago).
+        </span>
+        <span *ngIf="isContratoMayorIgualA50k()">
+          Se aplicará Garantía de Fiel Cumplimiento del 5% del valor total del contrato.
+        </span>
+      </p>
+    </div>
+  </div>
+
+  <!-- Configuración de Cláusula Octava -->
+  <div class="config-box">
+    <h3>6. Cláusula Octava - Plazo</h3>
+    <label>Estado de entrega de los bienes:</label>
+    <select [(ngModel)]="contratoData.clausulaOctavaEstadoBienes" style="width: 100%; margin-bottom: 10px;">
+      <option value="">Seleccione estado</option>
+      <option value="contratados">contratados</option>
+      <option value="instalados">instalados</option>
+      <option value="puesto_en_funcionamiento">puesto en funcionamiento</option>
+    </select>
+
+    <label>Período del plazo:</label>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+      <div>
+        <label>Número:</label>
+        <input type="number" [(ngModel)]="contratoData.clausulaOctavaPeriodoNumero" (ngModelChange)="onPeriodoChange()"
+          placeholder="Ej: 30, 45, 60" style="width: 100%;" min="1">
+      </div>
+      <div>
+        <label>Unidad:</label>
+        <select [(ngModel)]="contratoData.clausulaOctavaPeriodoUnidad" (ngModelChange)="onPeriodoChange()"
+          style="width: 100%;">
+          <option value="">Seleccione unidad</option>
+          <option value="dias">Días</option>
+          <option value="meses">Meses</option>
+          <option value="años">Años</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Mostrar vista previa del período en letras -->
+    <div *ngIf="contratoData.clausulaOctavaPeriodoTexto"
+      style="background-color: #e7f3ff; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+      <small style="color: #0066cc;">
+        <strong>Vista previa:</strong> {{ contratoData.clausulaOctavaPeriodoTexto }}
+      </small>
+    </div>
+
+    <label>Inicio del plazo:</label>
+    <input type="text" [(ngModel)]="contratoData.clausulaOctavaInicioPlazo"
+      placeholder="Ejemplo: la firma del contrato, la entrega del anticipo, etc." style="width: 100%;">
+  </div>
+
+  <!-- Configuración de Cláusula Décima -->
+  <div class="config-box">
+    <h3>7. Cláusula Décima - Multas</h3>
+    <label>Porcentaje de multa diaria:</label>
+    <input type="text" [(ngModel)]="contratoData.clausulaDecimaPorcentajeMulta"
+      placeholder="Ejemplo: 1% (recomendado mayor a 1% del monto total)" style="width: 100%;">
+  </div>
+
+  <!-- Configuración de Datos Bancarios -->
+  <div class="config-box">
+    <h3>8. Datos Bancarios del Beneficiario</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <div>
+        <label>Banco:</label>
+        <input type="text" [(ngModel)]="contratoData.beneficiarioBanco" placeholder="Nombre del banco"
+          style="width: 100%;">
+      </div>
+      <div>
+        <label>Nombre del Beneficiario:</label>
+        <input type="text" [(ngModel)]="contratoData.beneficiarioNombre" placeholder="Nombre completo"
+          style="width: 100%;">
+      </div>
+      <div>
+        <label>RUC:</label>
+        <input type="text" [(ngModel)]="contratoData.beneficiarioRuc" placeholder="RUC del beneficiario"
+          style="width: 100%;">
+      </div>
+      <div>
+        <label>Número de Cuenta:</label>
+        <input type="text" [(ngModel)]="contratoData.beneficiarioNumeroCuenta" placeholder="Número de cuenta"
+          style="width: 100%;">
+      </div>
+      <div>
+        <label>Tipo de Cuenta:</label>
+        <input type="text" [(ngModel)]="contratoData.beneficiarioTipoCuenta" placeholder="Corriente, Ahorros, etc."
+          style="width: 100%;">
+      </div>
+      <div>
+        <label>Correo Electrónico:</label>
+        <input type="email" [(ngModel)]="contratoData.beneficiarioCorreo" placeholder="correo@ejemplo.com"
+          style="width: 100%;">
+      </div>
+    </div>
+    <label>Dirección:</label>
+    <input type="text" [(ngModel)]="contratoData.beneficiarioDireccion" placeholder="Dirección completa"
+      style="width: 100%;">
+  </div>
+
+  <!-- Configuración de Comunicaciones -->
+  <div class="config-box">
+    <h3>9. Datos de Comunicaciones</h3>
+    <div style="margin-bottom: 15px;">
+      <h4>LA CONTRATANTE:</h4>
+      <label>Correo electrónico:</label>
+      <input type="email" [(ngModel)]="contratoData.contratanteCorreoComunicaciones"
+        placeholder="correo@hidalgohidalgo.com" style="width: 100%;">
+    </div>
+
+    <div>
+      <h4>EL CONTRATISTA:</h4>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+        <div>
+          <label>Provincia:</label>
+          <input type="text" [(ngModel)]="contratoData.contratistaProvinciaComunicaciones" placeholder="Provincia"
+            style="width: 100%;">
+        </div>
+        <div>
+          <label>Cantón:</label>
+          <input type="text" [(ngModel)]="contratoData.contratistaCantonComunicaciones" placeholder="Cantón"
+            style="width: 100%;">
+        </div>
+        <div>
+          <label>Parroquia:</label>
+          <input type="text" [(ngModel)]="contratoData.contratistaParroquiaComunicaciones" placeholder="Parroquia"
+            style="width: 100%;">
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px;">
+        <div>
+          <label>Dirección:</label>
+          <input type="text" [(ngModel)]="contratoData.contratistaDireccionComunicaciones"
+            placeholder="Dirección completa" style="width: 100%;">
+        </div>
+        <div>
+          <label>Número:</label>
+          <input type="text" [(ngModel)]="contratoData.contratistaNumeroComunicaciones" placeholder="Número"
+            style="width: 100%;">
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div>
+          <label>Teléfonos:</label>
+          <input type="text" [(ngModel)]="contratoData.contratistaTelefonosComunicaciones" placeholder="Teléfonos"
+            style="width: 100%;">
+        </div>
+        <div>
+          <label>Correo Electrónico:</label>
+          <input type="email" [(ngModel)]="contratoData.contratistaCorreoComunicaciones"
+            placeholder="correo@contratista.com" style="width: 100%;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Configuración de Fecha de Firma -->
+  <div class="config-box">
+    <h3>10. Fecha de Firma del Contrato</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+      <div>
+        <label>Día:</label>
+        <input type="text" [(ngModel)]="contratoData.fechaFirmaContratoDia" placeholder="01-31" style="width: 100%;">
+      </div>
+      <div>
+        <label>Mes:</label>
+        <input type="text" [(ngModel)]="contratoData.fechaFirmaContratoMes" placeholder="enero, febrero, etc."
+          style="width: 100%;">
+      </div>
+      <div>
+        <label>Año:</label>
+        <input type="text" [(ngModel)]="contratoData.fechaFirmaContratoAnio" placeholder="2025" style="width: 100%;">
+      </div>
+    </div>
+  </div>
+
+  <div class="config-box">
+    <h3>11. Cláusulas de Terminación del Contrato</h3>
+
+    <div style="background-color: #f0f8ff; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+      <h5 style="margin-top: 0; color: #2c5aa0;">Terminación por Causas Imputables a LA CONTRATANTE</h5>
+      <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">
+        Días de incumplimiento culposo de LA CONTRATANTE que da derecho al contratista a demandar la resolución
+      </p>
+      <label>Número de días de incumplimiento:</label>
+      <input type="number" [(ngModel)]="contratoData.diasIncumplimientoContratante"
+        placeholder="Ej: 15, 30, 45 (según complejidad del proyecto)" style="width: 100%;">
+    </div>
+
+    <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px;">
+      <h5 style="margin-top: 0; color: #856404;">Terminación Unilateral por LA CONTRATANTE</h5>
+      <p style="color: #856404; font-size: 0.9em; margin-bottom: 10px;">
+        Días de suspensión del contrato por EL CONTRATISTA (sin fuerza mayor/caso fortuito) que permite terminación
+        unilateral
+      </p>
+      <label>Número de días de suspensión:</label>
+      <input type="number" [(ngModel)]="contratoData.diasSuspensionContratista"
+        placeholder="Ej: 10, 15, 30 (según complejidad del proyecto)" style="width: 100%;">
+    </div>
+
+    <div style="background-color: #e7f3ff; padding: 10px; border-radius: 5px; margin-top: 10px;">
+      <p style="margin: 0; font-size: 0.9em; color: #0066cc;">
+        <strong>Recomendación:</strong> Los plazos deben ser proporcionales a la complejidad del proyecto.
+        Para contratos simples: 10-15 días. Para contratos complejos: 30-45 días.
+      </p>
+    </div>
+  </div>
+
+  <!-- Botón para generar PDF -->
+  <div style="text-align: center; margin: 20px 0;">
+    <button (click)="checkElement()"
+      style="margin-right: 10px; background-color: orange; color: white; padding: 8px 16px; border: none; border-radius: 3px;">
+      Debug: Verificar Elemento
+    </button>
+    <button (click)="generatePDF()"
+      style="background-color: #2c5aa0; color: white; padding: 12px 30px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">
+      Generar PDF del Contrato
+    </button>
+  </div>
+</div>
+
 <div id="print">
-  <table>
-    <thead>
-      <tr>
-        <td>
-          <div class="print-header">
-            <br>
-            <table class="contract-header-table">
-              <tr>
-                <td rowspan="3" class="header-cell-logo">
-                  <img src="assets/logo.png" alt="Logo" class="logo-img">
-                </td>
-                <td rowspan="3" class="header-cell-title">
-                  CONTRATO PARA LA ADQUISICIÓN DE BIENES
-                </td>
-                <td class="header-cell-info"><strong>TIPO:</strong> Documento</td>
-                <td class="header-cell-info"><strong>VERSIÓN:</strong> 2</td>
-              </tr>
-              <tr>
-                <td class="header-cell-detail"><strong>PROCESO:</strong> GESTIÓN EJECUCIÓN Y CONTROL</td>
-                <td class="header-cell-detail"><strong>VIGENCIA:</strong> 01-abril-2025</td>
-              </tr>
-              <tr>
-                <td class="header-cell-info"><strong>CÓDIGO:</strong> ECO-D-08</td>
-                <td class="header-cell-info"><strong>PÁGINA:</strong> 1 de 22</td>
-              </tr>
-            </table>
-          </div>
-        </td>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>
-          <div class="contract-preview">
-            <div class="contract-paragraph">
-              Comparecen a la celebración del presente contrato, por una parte, la <strong>COMPAÑÍA HIDALGO E HIDALGO
-                S.A.</strong>, con
-              RUC número <strong>1790059111001</strong>,
-
-              <!-- Nuevo selector para tipo de representante contratante -->
-              <select [(ngModel)]="contratoData.tipoRepresentanteContratante"
-                (ngModelChange)="onTipoRepresentanteContratanteChange()" style="width: 200px; margin: 0 5px;">
-                <option value="">Seleccione representante</option>
-                <option value="gerente_general">Gerente General</option>
-                <option value="apoderado_especial">Apoderado Especial</option>
-                <option value="superintendente">Superintendente del Proyecto</option>
-              </select>
-
-              <!-- Campos condicionales según el tipo de representante -->
-              <div *ngIf="contratoData.tipoRepresentanteContratante === 'apoderado_especial'" style="margin: 10px 0;">
-                <label>Seleccione el Apoderado Especial:</label><br>
-                <select [(ngModel)]="contratoData.apoderadoEspecialSeleccionado" style="width: 300px; margin-top: 5px;">
-                  <option value="">Seleccione apoderado</option>
-                  <option value="damian_molina">Damián Oswaldo Molina Bernal</option>
-                  <option value="roberto_alomoto">Roberto Jaime Alomoto Landeta</option>
-                </select>
-              </div>
-
-              <div *ngIf="contratoData.tipoRepresentanteContratante === 'superintendente'" style="margin: 10px 0;">
-                <label>Nombre del Proyecto:</label><br>
-                <input type="text" [(ngModel)]="contratoData.nombreProyectoSuperintendente"
-                  placeholder="Ingrese el nombre del proyecto" style="width: 300px; margin-top: 5px;"><br><br>
-
-                <label>Nombre del Superintendente:</label><br>
-                <input type="text" [(ngModel)]="contratoData.nombreSuperintendente"
-                  placeholder="Ingrese el nombre del superintendente" style="width: 300px; margin-top: 5px;">
-              </div>
-
-              <!-- Campo para documento de respaldo
-              <div *ngIf="contratoData.tipoRepresentanteContratante === 'superintendente'" style="margin: 10px 0;">
-                <label>Documento de Respaldo (PDF o Imagen - Máx 5MB):</label><br>
-                <div class="image-drop-zone" (drop)="onDocumentFileDropped($event)"
-                  (dragover)="onDocumentDragOver($event)" (dragleave)="onDocumentDragLeave($event)"
-                  (click)="documentoRespaldoRef.click()"
-                  style="border: 2px dashed #ccc; padding: 20px; text-align: center; cursor: pointer; margin-top: 5px;">
-                  <input type="file" #documentoRespaldoRef style="display: none;"
-                    (change)="onDocumentFileSelected($event)" accept=".pdf,image/*">
-                  <span *ngIf="!selectedDocumentFileName">Arrastre y suelte un archivo aquí o haga clic para
-                    seleccionar.</span>
-                  <img *ngIf="previewDocumentUrl" [src]="previewDocumentUrl" alt="Vista previa del documento"
-                    style="max-width: 100%; max-height: 150px; margin-top: 10px;">
-                  <span *ngIf="selectedDocumentFileName" style="display: block; margin-top: 5px;">
-                    Archivo: {{ selectedDocumentFileName }}
-                    <button type="button" (click)="clearDocumentSelection(); $event.stopPropagation();"
-                      style="margin-left: 10px; font-size: 0.8em;">Quitar</button>
-                  </span>
-                </div>
-              </div> -->
-
-              <!-- Mostrar el texto del representante -->
-              <span [innerHTML]="getRepresentanteContratanteTexto()"></span>
-              a quien en adelante se le denominará <strong>LA CONTRATANTE</strong>; y, por otra parte
-
-              <!-- Campo para nombre del CONTRATISTA -->
-              <input type="text" [(ngModel)]="contratoData.nombreContratista"
-                placeholder="Nombre del Contratista (persona natural o jurídica)" style="width: 350px; margin: 0 5px;">
-
-              con <strong>RUC No. <input type="text" [(ngModel)]="contratoData.rucContratista"
-                  placeholder="RUC Contratista" style="width: 150px;"></strong>,
-              debidamente representada por <input type="text" [(ngModel)]="contratoData.representanteLegalContratista"
-                placeholder="Nombre del Representante Legal" style="width: 250px;">, según
-              documento que forma parte de este contrato, a quien en adelante se le
-              denominará <strong>EL CONTRATISTA</strong>. Las partes se obligan en virtud del presente contrato, al
-              tenor de las siguientes cláusulas:
-            </div>
-
-
-            <p class="contract-paragraph" style="text-align: left !important;"><strong>Cláusula Primera. – ANTECEDENTES.
-                -</strong>
-              <textarea [(ngModel)]="contratoData.clausulaPrimeraAntecedentes" placeholder="Antecedentes"
-                style="width: 100%; min-height: 60px;"></textarea>
-            </p>
-            <p class="contract-paragraph"><strong>Cláusula Segunda. - DOCUMENTOS DEL CONTRATO. -</strong> Forman parte
-              integrante del
-              contrato los siguientes documentos:
-            </p>
-            <p class="contract-paragraph" style="padding-left: 40px;">a) Los documentos de identidad de las partes, y la
-              calidad en que comparecen;</p>
-            <p class="contract-paragraph" style="padding-left: 40px;">b) La oferta presentada por el contratista, con
-              todos sus documentos y anexos que
-              la conforman.</p>
-            <p class="contract-paragraph" style="padding-left: 40px;" *ngIf="shouldIncludeClausulaSegundaPuntoC()">
-              c) Las garantías rendidas por el contratista.
-            </p>
-            <p class="contract-paragraph"><strong>Cláusula Tercera. - DE LA INTERPRETACIÓN. -</strong>Los términos del
-              presente contrato
-              se interpretarán en su sentido
-              literal, a fin de revelar claramente la intención de los contratantes. En todo caso su interpretación
-              sigue las
-              siguientes normas:</p>
-            <ul>
-              <li class="contract-paragraph" style="list-style-type: disc; margin-left: 60px;">Se estará a lo estipulado
-                en el contrato en su sentido natural y obvio, de conformidad con el objeto contractual y la intención de
-                los contratantes. De existir contradicciones entre el contrato y sus documentos, prevalecerán las
-                estipulaciones del contrato y las especificaciones técnicas establecidas por la contratante;</li>
-              <li class="contract-paragraph" style="list-style-type: disc; margin-left: 60px;">Supletoriamente se estará
-                a la oferta;</li>
-              <li class="contract-paragraph" style="list-style-type: disc; margin-left: 60px;">En su falta o
-                insuficiencia se aplicarán las normas contenidas en el Título XIII del Libro IV del Código Civil, “De la
-                Interpretación de los contratos.”</li>
-            </ul>
-            <!-- Reemplazar la Cláusula Cuarta existente con esta nueva versión -->
-            <div
-              style="margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #f0f8ff;">
-              <h4 style="margin-top: 0;">Configuración de Cláusula Cuarta</h4>
-
-              <label style="display: block; margin-bottom: 10px;">
-                <input type="checkbox" [(ngModel)]="contratoData.ofertaContemplaSoporteTecnico"
-                  style="margin-right: 5px;">
-                ¿La oferta contempla soporte técnico, mantenimiento y capacitación?
-              </label>
-
-              <div *ngIf="contratoData.ofertaContemplaSoporteTecnico" style="margin-left: 20px;">
-                <label style="display: block; margin-bottom: 5px;">Lapso de soporte técnico:</label>
-                <input type="text" [(ngModel)]="contratoData.clausulaCuartaLapsoSoporte"
-                  placeholder="Ejemplo: 12 meses, 2 años, etc." style="width: 100%; margin-bottom: 10px;">
-
-                <label style="display: block; margin-bottom: 5px;">Número de servidores para capacitación:</label>
-                <input type="text" [(ngModel)]="contratoData.clausulaCuartaCapacitacionNumeroServidores"
-                  placeholder="Ejemplo: 5" style="width: 100%; margin-bottom: 10px;">
-
-                <label style="display: block; margin-bottom: 10px;">
-                  <input type="checkbox" [(ngModel)]="contratoData.capacitacionRequierePersonalCertificado"
-                    style="margin-right: 5px;">
-                  ¿La capacitación requiere personal certificado por el fabricante?
-                </label>
-              </div>
-            </div>
-
-            <!-- Cláusula Cuarta en el contrato -->
-            <p class="contract-paragraph">
-              <strong>Cláusula Cuarta. - OBLIGACIONES DEL CONTRATISTA. -</strong>
-              Además de las obligaciones contempladas a lo largo del clausulado del presente contrato,
-              <strong>EL CONTRATISTA</strong> se obliga a:
-            </p>
-
-            <p class="contract-paragraph" style="padding-left: 40px;">
-              <strong>a)</strong> Ejecutar las obras materia del presente contrato de acuerdo con las
-              especificaciones de su oferta y las indicaciones de <strong>LA CONTRATANTE</strong>;
-            </p>
-
-            <p class="contract-paragraph" style="padding-left: 40px;">
-              <strong>b)</strong> Entregar los bienes objeto del contrato en las condiciones y plazos estipulados;
-            </p>
-
-            <p class="contract-paragraph" style="padding-left: 40px;">
-              <strong>c)</strong> Cumplir con las normas de seguridad y calidad exigidas por <strong>LA
-                CONTRATANTE</strong>.
-            </p>
-
-            <!-- Cláusula adicional condicional -->
-            <div *ngIf="shouldShowClausulaCuartaAdicional()">
-              <p class="contract-paragraph">
-                Adicionalmente el contratista proporcionará el soporte técnico, los mantenimientos preventivo y
-                correctivo respectivos por el lapso de
-                <strong>{{ contratoData.clausulaCuartaLapsoSoporte || '[LAPSO_SOPORTE_TECNICO]' }}</strong>
-                contados a partir de la fecha de suscripción del acta de entrega recepción de los bienes,
-                periodo que corresponde al de vigencia de la garantía técnica; entregará la documentación de
-                los bienes; y, brindará la capacitación necesaria para
-                <strong>{{ contratoData.clausulaCuartaCapacitacionNumeroServidores || '[NUMERO_SERVIDORES]' }}</strong>
-                servidores en las instalaciones de la entidad contratante<span
-                  *ngIf="shouldIncludePersonalCertificado()">,
-                  impartida por personal certificado por el fabricante</span>.
-              </p>
-            </div>
-            <p class="contract-paragraph"><strong>Cláusula Quinta. - PRECIO DEL CONTRATO. -</strong> El valor del
-              presente contrato, que la contratante pagará al
-              contratista, es el de <input type="number"
-                [(ngModel)]="contratoData.clausulaQuintaPrecioTotalLetrasNumeros" (ngModelChange)="onPriceChange()"
-                placeholder="Precio total en NÚMEROS (ej: 60000)" style="width: 220px; margin-right: 5px;"
-                [style.border-color]="!contratoData.clausulaQuintaPrecioTotalLetrasNumeros || contratoData.clausulaQuintaPrecioTotalLetrasNumeros <= 0 ? 'red' : null">
-              dólares de los Estados Unidos de América
-              <span *ngIf="contratoData.clausulaQuintaPrecioTotalLetras">
-                (<strong>{{ contratoData.clausulaQuintaPrecioTotalLetras }}</strong>)
-              </span>, más IVA,
-              de conformidad con la oferta presentada por el contratista, valor que se desglosa como se indica a
-              continuación:
-              <small
-                *ngIf="!contratoData.clausulaQuintaPrecioTotalLetrasNumeros || contratoData.clausulaQuintaPrecioTotalLetrasNumeros <= 0"
-                style="color: red; display: block; margin-top: 5px; font-size: 0.9em;">
-                * Ingrese el precio total (mayor a 0) para ver las cláusulas de Forma de Pago y Garantías.
-              </small>
-            </p>
-            <p class="contract-paragraph">
-              <label for="clausulaQuintaImagenTabla">Tabla de Cantidades y Precios (Adjuntar Imagen - Máx
-                2MB):</label><br>
-            <div class="image-drop-zone" (drop)="onFileDropped($event)" (dragover)="onDragOver($event)"
-              (dragleave)="onDragLeave($event)" (click)="fileDropRef.click()">
-              <!-- Permite click para seleccionar archivo -->
-              <input type="file" #fileDropRef style="display: none;" (change)="onFileSelected($event)" accept="image/*">
-              <span *ngIf="!previewImageUrl">Arrastre y suelte una imagen aquí o haga clic para seleccionar.</span>
-              <img *ngIf="previewImageUrl" [src]="previewImageUrl" alt="Vista previa de tabla"
-                style="max-width: 100%; max-height: 200px; margin-top: 10px;">
-              <span *ngIf="selectedFileName" style="display: block; margin-top: 5px;">Archivo: {{ selectedFileName }}
-                <button type="button" (click)="clearImageSelection(); $event.stopPropagation();"
-                  style="margin-left: 10px; font-size: 0.8em;">Quitar</button>
-              </span>
-            </div>
-            <!-- El textarea original se elimina o comenta -->
-            <!-- <textarea id="clausulaQuintaTablaCantidadesPrecios"
-                [(ngModel)]="contratoData.clausulaQuintaTablaCantidadesPrecios"
-                placeholder="Pegar aquí la tabla HTML de cantidades y precios"
-                style="width: 100%; min-height: 100px;"></textarea> -->
-            <p class="contract-paragraph">Los precios acordados en el contrato por los bienes especificados son fijos,
-              no sujetos a reajuste alguno, y
-              constituirán la única compensación al contratista por todos sus costos, inclusive cualquier impuesto,
-              derecho o
-              tasa que tuviese que pagar, excepto el Impuesto al Valor Agregado que será añadido al precio del contrato.
-            </p>
-
-            <!-- Cláusula Sexta: Forma de Pago -->
-            <ng-container
-              *ngIf="contratoData.clausulaQuintaPrecioTotalLetrasNumeros && contratoData.clausulaQuintaPrecioTotalLetrasNumeros > 0">
-              <p class="contract-paragraph"><strong>Cláusula Sexta. - FORMA DE PAGO. - </strong>
-                <label for="clausulaSextaFormaPagoOpcion">Opción Forma de Pago:</label>
-                <select id="clausulaSextaFormaPagoOpcion" [(ngModel)]="contratoData.clausulaSextaFormaPagoOpcion"
-                  (ngModelChange)="onPaymentOptionChange()">
-                  <option value="">Seleccione una opción o describa</option>
-                  <option value="con_anticipo">Con Anticipo</option>
-                  <option value="sin_anticipo_un_pago">Sin Anticipo - Un Pago</option>
-                  <option value="sin_anticipo_varios_pagos">Sin Anticipo - Varios Pagos</option>
-                </select>
-              </p>
-
-              <div *ngIf="contratoData.clausulaSextaFormaPagoOpcion === 'con_anticipo'">
-                <p style="margin-bottom: 1em;">
-                  LA CONTRATANTE entregará al CONTRATISTA, en calidad de anticipo el valor de
-                  <input type="text" [(ngModel)]="contratoData.anexo1ConAnticipoPorcentaje" placeholder="% Anticipo"
-                    style="width: 100px;">,
-                  en dólares de los Estados Unidos de América.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  El anticipo que la CONTRATANTE otorgue al CONTRATISTA para la provisión de los bienes objeto de este
-                  contrato no
-                  podrá ser destinado a fines ajenos a esta contratación.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  El valor restante, esto es,
-                  <input type="text" [(ngModel)]="contratoData.anexo1ConAnticipoValorRestantePorcentaje"
-                    placeholder="% Restante" style="width: 100px;">
-                  del valor del contrato que asciende a
-                  <strong>USD. <input type="text" [(ngModel)]="contratoData.anexo1ConAnticipoValorRestanteUSD"
-                      placeholder="Valor restante USD" style="width: 120px;"></strong>,
-                  se cancelará contra presentación de facturas
-                  <input type="text" [(ngModel)]="contratoData.anexo1ConAnticipoPeriodoFacturas"
-                    placeholder="Período facturas" style="width: 150px;">.
-                  De cada planilla se descontará la amortización del anticipo y cualquier otra obligación a cargo del
-                  CONTRATISTA.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  Los pagos que se realicen al CONTRATISTA se harán con la presentación de la correspondiente factura,
-                  previa
-                  aprobación de LA CONTRATANTE.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  No habrá lugar a alegar mora de LA CONTRATANTE, mientras no se amortice la totalidad del anticipo
-                  otorgado.
-                </p>
-              </div>
-              <div *ngIf="contratoData.clausulaSextaFormaPagoOpcion === 'sin_anticipo_un_pago'">
-                El valor del contrato se cancelará en un solo pago contra entrega de los bienes, y una vez suscrita el
-                acta de entrega recepción. Los pagos que se realicen al CONTRATISTA se harán con la presentación de la
-                correspondiente factura, previa aprobación de LA CONTRATANTE.
-              </div>
-              <div *ngIf="contratoData.clausulaSextaFormaPagoOpcion === 'sin_anticipo_varios_pagos'">
-                El valor del contrato se cancelará mediante pago contra presentación de facturas
-                <input type="text" [(ngModel)]="contratoData.anexo1SinAnticipoVariosPagosPeriodo"
-                  placeholder="Período facturas (varios pagos)" style="width: 200px;">. Todos los pagos que se hagan al
-                CONTRATISTA por
-                cuenta de este contrato se efectuarán con sujeción a los precios unitarios acordados y por los bienes
-                efectivamente entregados a entera satisfacción de la contratante. Los pagos que se realicen al
-                CONTRATISTA se harán con la presentación de la correspondiente factura, previa aprobación de LA
-                CONTRATANTE.
-              </div>
-
-              <p class="contract-paragraph"><strong>Pagos indebidos. -</strong> LA CONTRATANTE se reserva el derecho de
-                reclamar al CONTRATISTA, en cualquier tiempo, antes o
-                después de la ejecución del contrato, sobre cualquier pago indebido por error de cálculo o por cualquier
-                otra
-                razón debidamente justificada, obligándose EL CONTRATISTA a satisfacer las reclamaciones que por este
-                motivo
-                llegare a plantear LA CONTRATANTE, reconociéndose el interés legal vigente.</p>
-              <p class="contract-paragraph"><strong>Requisito previo al pago:</strong> Previo al pago por los bienes, el
-                contratista deberá presentar la certificación que
-                acredite estar al día en el pago de aportes, fondos de reserva y descuentos al Instituto Ecuatoriano de
-                Seguridad Social, por los empleados y trabajadores a su cargo.</p>
-              <p class="contract-paragraph">De los pagos que deba hacer, la contratante podrá retener el valor de las
-                multas que procedan.</p>
-              <p class="contract-paragraph">Los pagos se realizarán mediante transferencia bancaria según el siguiente
-                detalle:</p>
-              <p class="contract-paragraph" style="padding-left: 40px;"><strong>DATOS DEL BENEFICIARIO Y SU
-                  BANCO</strong></p>
-              <p class="contract-paragraph" style="padding-left: 40px;"><strong>BANCO:</strong> <input type="text"
-                  [(ngModel)]="contratoData.beneficiarioBanco" placeholder="Banco"></p>
-              <p class="contract-paragraph" style="padding-left: 40px;"><strong>NOMBRE:</strong> <input type="text"
-                  [(ngModel)]="contratoData.beneficiarioNombre" placeholder="Nombre Beneficiario"></p>
-              <p class="contract-paragraph" style="padding-left: 40px;"><strong>DIRECCIÓN:</strong> <input type="text"
-                  [(ngModel)]="contratoData.beneficiarioDireccion" placeholder="Dirección Beneficiario"></p>
-              <p class="contract-paragraph" style="padding-left: 40px;"><strong>RUC:</strong> <input type="text"
-                  [(ngModel)]="contratoData.beneficiarioRuc" placeholder="RUC Beneficiario"></p>
-              <p class="contract-paragraph" style="padding-left: 40px;"><strong>NRO. CUENTA:</strong> <input type="text"
-                  [(ngModel)]="contratoData.beneficiarioNumeroCuenta" placeholder="Número de Cuenta"></p>
-              <p class="contract-paragraph" style="padding-left: 40px;"><strong>TIPO DE CUENTA:</strong> <input
-                  type="text" [(ngModel)]="contratoData.beneficiarioTipoCuenta" placeholder="Tipo de Cuenta"></p>
-              <p class="contract-paragraph" style="padding-left: 40px;"><strong>CORREO:</strong> <input type="email"
-                  [(ngModel)]="contratoData.beneficiarioCorreo" placeholder="Correo Beneficiario"></p>
-              <p class="contract-paragraph">En el caso de que no sea posible realizar los pagos mediante transferencia,
-                podrán utilizarse otros sistemas de
-                pago con las seguridades y registros pertinentes.</p>
-            </ng-container> <!-- End Cláusula Sexta conditional -->
-
-            <!-- Cláusula Séptima: Garantías -->
-            <ng-container
-              *ngIf="contratoData.clausulaQuintaPrecioTotalLetrasNumeros && contratoData.clausulaQuintaPrecioTotalLetrasNumeros > 0 && contratoData.clausulaSextaFormaPagoOpcion">
-
-              <!-- Checkbox para garantía técnica (solo cuando es opcional) -->
-              <div *ngIf="shouldShowGarantiaTecnicaCheckbox()"
-                style="margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
-                <h4 style="margin-top: 0;">Configuración de Garantía Técnica (Opcional)</h4>
-                <label style="display: block; margin-bottom: 10px;">
-                  <input type="checkbox" [(ngModel)]="contratoData.requiereGarantiaTecnica" style="margin-right: 5px;">
-                  ¿Se requiere garantía técnica?
-                </label>
-
-                <div *ngIf="contratoData.requiereGarantiaTecnica" style="margin-left: 20px;">
-                  <label style="display: block; margin-bottom: 5px;">Tipo de Garantía Técnica:</label>
-                  <select [(ngModel)]="contratoData.tipoGarantiaTecnica" style="width: 100%; margin-bottom: 10px;">
-                    <option value="">Seleccione tipo de garantía</option>
-                    <option value="del_fabricante">Del fabricante, representante, distribuidor o vendedor autorizado
-                    </option>
-                    <option value="incondicional_irrevocable">Incondicional, irrevocable y de cobro inmediato</option>
-                  </select>
-
-                  <label style="display: block; margin-bottom: 5px;">Plazo de la Garantía Técnica:</label>
-                  <input type="text" [(ngModel)]="contratoData.plazoGarantiaTecnica"
-                    placeholder="Ejemplo: 12 meses, 2 años, etc." style="width: 100%;">
-                </div>
-              </div>
-
-              <!-- Checkbox para garantía de buen uso del anticipo (solo cuando es opcional) -->
-              <div *ngIf="shouldShowGarantiaBuenUsoAnticipoCheckbox()"
-                style="margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #e8f5e8;">
-                <h4 style="margin-top: 0;">Configuración de Garantía de Buen Uso del Anticipo (Opcional)</h4>
-                <p style="color: #2d5016; margin-bottom: 15px;">
-                  <small>Para contratos de hasta USD 20,000 con anticipo, esta garantía es opcional.</small>
-                </p>
-                <label style="display: block; margin-bottom: 10px;">
-                  <input type="checkbox" [(ngModel)]="contratoData.requiereGarantiaBuenUsoAnticipo"
-                    style="margin-right: 5px;">
-                  ¿Se requiere garantía de buen uso del anticipo?
-                </label>
-              </div>
-
-              <!-- Mostrar cuando las garantías son obligatorias -->
-              <div *ngIf="isGarantiaTecnicaObligatoria()"
-                style="margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #fff3cd;">
-                <h4 style="margin-top: 0;">Garantía Técnica (Obligatoria)</h4>
-                <p style="color: #856404; margin-bottom: 15px;">
-                  <small>Para este tipo de contrato, la garantía técnica es obligatoria.</small>
-                </p>
-
-                <label style="display: block; margin-bottom: 5px;">Tipo de Garantía Técnica:</label>
-                <select [(ngModel)]="contratoData.tipoGarantiaTecnica" style="width: 100%; margin-bottom: 10px;">
-                  <option value="">Seleccione tipo de garantía</option>
-                  <option value="del_fabricante">Del fabricante, representante, distribuidor o vendedor autorizado
-                  </option>
-                  <option value="incondicional_irrevocable">Incondicional, irrevocable y de cobro inmediato</option>
-                </select>
-
-                <label style="display: block; margin-bottom: 5px;">Plazo de la Garantía Técnica:</label>
-                <input type="text" [(ngModel)]="contratoData.plazoGarantiaTecnica"
-                  placeholder="Ejemplo: 12 meses, 2 años, etc." style="width: 100%;">
-              </div>
-
-              <div *ngIf="isGarantiaBuenUsoAnticipoObligatoria()"
-                style="margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #fff3cd;">
-                <h4 style="margin-top: 0;">Garantía de Buen Uso del Anticipo (Obligatoria)</h4>
-                <p style="color: #856404; margin-bottom: 15px;">
-                  <small>Para contratos superiores a USD 20,000 con anticipo, esta garantía es obligatoria.</small>
-                </p>
-              </div>
-
-              <p class="contract-paragraph"><strong>Cláusula Séptima. – GARANTÍAS. - </strong>
-                <!-- Display the determined guarantee option as text -->
-                <span *ngIf="contratoData.clausulaSeptimaGarantiasOpcion === 'opcion1_1'" style="font-weight: normal;">
-                  Se aplicará la Opción 1.1 (Bienes &lt;50k, Sin Anticipo).
-                </span>
-                <span *ngIf="contratoData.clausulaSeptimaGarantiasOpcion === 'opcion1_2'" style="font-weight: normal;">
-                  Se aplicará la Opción 1.2 (Bienes &lt;50k, Con Anticipo).
-                </span>
-                <span *ngIf="contratoData.clausulaSeptimaGarantiasOpcion === 'opcion2_1'" style="font-weight: normal;">
-                  Se aplicará la Opción 2.1 (Bienes &gt;=50k, Con Anticipo).
-                </span>
-                <span *ngIf="contratoData.clausulaSeptimaGarantiasOpcion === 'opcion2_2'" style="font-weight: normal;">
-                  Se aplicará la Opción 2.2 (Bienes &gt;=50k, Sin Anticipo).
-                </span>
-              </p>
-
-              <!-- Opciones de Garantías con garantía técnica dinámica -->
-              <div *ngIf="contratoData.clausulaSeptimaGarantiasOpcion === 'opcion1_1'">
-                <p style="margin-bottom: 1em;">
-                  En este contrato se rendirán las siguientes garantías:
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>FONDO DE GARANTÍA. -</strong> Para afianzar el fiel cumplimiento del contrato, de cada pago
-                  que
-                  se realice al contratista se retendrá el <strong>5%</strong> como fondo de garantía.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  Con cargo al fondo de garantía se podrán ejecutar las multas que le fueren impuestas al contratista.
-                </p>
-
-                <!-- Garantía Técnica condicional para Opción 1.1 -->
-                <div
-                  *ngIf="contratoData.requiereGarantiaTecnica && contratoData.tipoGarantiaTecnica && contratoData.plazoGarantiaTecnica">
-                  <p style="margin-bottom: 1em;">
-                    <strong>Garantía Técnica.-</strong> Como el presente contrato de obras involucra la entrega de
-                    bienes,
-                    para asegurar la calidad y buen funcionamiento de los bienes, al momento de la suscripción del
-                    contrato
-                    y como parte integrante del mismo, <strong>EL CONTRATISTA</strong> entrega una garantía
-                    {{ getTipoGarantiaTecnicaTexto() }}, la que entrará en vigencia a partir de la entrega
-                    recepción de los bienes y se mantendrá vigente por el lapso de
-                    <strong>{{ contratoData.plazoGarantiaTecnica }}</strong>.
-                  </p>
-                </div>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>Devolución de las garantías. -</strong> Las garantías entregadas se devolverán así:
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>Devolución del fondo de garantía. -</strong> El fondo de garantía retenido se devolverá a la
-                  suscripción del acta de entrega-recepción de los trabajos a entera satisfacción de la contratante.
-                </p>
-
-                <!-- Devolución de garantía técnica condicional -->
-                <div *ngIf="contratoData.requiereGarantiaTecnica && contratoData.tipoGarantiaTecnica">
-                  <p style="margin-bottom: 1em;">
-                    La garantía técnica se devolverá una vez cumplido su plazo de vigencia y verificado el buen
-                    funcionamiento de los bienes a satisfacción de <strong>LA CONTRATANTE</strong>.
-                  </p>
-                </div>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>Ejecución de las garantías. -</strong> Las garantías contractuales podrán ser ejecutadas por
-                  <strong>LA CONTRATANTE</strong> en los siguientes casos:
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>Retención definitiva del fondo de garantía:</strong>
-                  El fondo de garantía será retenido definitivamente cuando la contratante declare
-                  anticipada y unilateralmente terminado el contrato por causas imputables al contratista.
-                </p>
-
-                <!-- Ejecución de garantía técnica condicional -->
-                <div *ngIf="contratoData.requiereGarantiaTecnica && contratoData.tipoGarantiaTecnica">
-                  <p style="margin-bottom: 1em;">
-                    <strong>La técnica:</strong> Cuando se incumpla con el objeto de esta garantía, de acuerdo con lo
-                    establecido en la oferta y este contrato.
-                  </p>
-                </div>
-              </div>
-
-              <!-- Opción 1.2: Contratos < 50k, Con Anticipo -->
-              <div *ngIf="contratoData.clausulaSeptimaGarantiasOpcion === 'opcion1_2'">
-                <p style="margin-bottom: 1em;">
-                  En este contrato se rendirán las siguientes garantías:
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>FONDO DE GARANTÍA. -</strong> Para afianzar el fiel cumplimiento del contrato, de cada pago
-                  que
-                  se realice al contratista se retendrá el <strong>5%</strong> como fondo de garantía.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  Con cargo al fondo de garantía se podrán ejecutar las multas que le fueren impuestas al contratista.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>De buen uso del anticipo. -</strong> EL CONTRATISTA para recibir el anticipo estipulado,
-                  deberá rendir previamente garantía incondicional, irrevocable y de cobro inmediato, por igual valor
-                  del anticipo.
-                </p>
-
-                <!-- Garantía Técnica condicional para Opción 1.2 -->
-                <div
-                  *ngIf="contratoData.requiereGarantiaTecnica && contratoData.tipoGarantiaTecnica && contratoData.plazoGarantiaTecnica">
-                  <p style="margin-bottom: 1em;">
-                    <strong>Garantía Técnica.-</strong> Como el presente contrato de obras involucra la entrega de
-                    bienes,
-                    para asegurar la calidad y buen funcionamiento de los bienes, al momento de la suscripción del
-                    contrato
-                    y como parte integrante del mismo, <strong>EL CONTRATISTA</strong> entrega una garantía
-                    {{ getTipoGarantiaTecnicaTexto() }}, la que entrará en vigencia a partir de la entrega
-                    recepción de los bienes y se mantendrá vigente por el lapso de
-                    <strong>{{ contratoData.plazoGarantiaTecnica }}</strong>.
-                  </p>
-                </div>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>Devolución de las garantías. -</strong> Las garantías entregadas se devolverán así:
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>Devolución del fondo de garantía. -</strong> El fondo de garantía retenido se devolverá a la
-                  suscripción del acta de entrega-recepción de los trabajos a entera satisfacción de la contratante.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  La garantía de buen uso del anticipo, una vez devengado el anticipo, o entregadas por parte del
-                  <strong>CONTRATISTA</strong> a entera satisfacción de <strong>LA CONTRATANTE</strong> las obras
-                  contratadas.
-                </p>
-
-                <!-- Devolución de garantía técnica condicional -->
-                <div *ngIf="contratoData.requiereGarantiaTecnica && contratoData.tipoGarantiaTecnica">
-                  <p style="margin-bottom: 1em;">
-                    La garantía técnica se devolverá una vez cumplido su plazo de vigencia y verificado el buen
-                    funcionamiento de los bienes a satisfacción de <strong>LA CONTRATANTE</strong>.
-                  </p>
-                </div>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>Ejecución de las garantías. -</strong> Las garantías contractuales podrán ser ejecutadas por
-                  <strong>LA CONTRATANTE</strong> en los siguientes casos:
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>Retención definitiva del fondo de garantía:</strong> El fondo de garantía será retenido
-                  definitivamente cuando la contratante declare anticipada y unilateralmente terminado el contrato
-                  por causas imputables al contratista.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>La de buen uso del anticipo:</strong>
-                </p>
-                <p style="margin-bottom: 1em; padding-left: 20px;">
-                  <strong>a)</strong> Si <strong>EL CONTRATISTA</strong> no la renovare <strong>cinco (5) días</strong>
-                  antes de su vencimiento.
-                </p>
-                <p style="margin-bottom: 1em; padding-left: 20px;">
-                  <strong>b)</strong> En caso de que <strong>EL CONTRATISTA</strong> no devuelva el saldo del anticipo,
-                  después de <strong>diez días</strong> de requerimiento por escrito por parte de <strong>LA
-                    CONTRATANTE</strong>;
-                </p>
-                <p style="margin-bottom: 1em; padding-left: 20px;">
-                  <strong>c)</strong> En caso de terminación unilateral del contrato y que <strong>EL
-                    CONTRATISTA</strong>
-                  no pague a <strong>LA CONTRATANTE</strong> el saldo adeudado del anticipo, después de <strong>diez
-                    días</strong>
-                  de notificado con la liquidación del contrato.
-                </p>
-
-                <!-- Ejecución de garantía técnica condicional para Opción 1.2 -->
-                <div *ngIf="contratoData.requiereGarantiaTecnica && contratoData.tipoGarantiaTecnica">
-                  <p style="margin-bottom: 1em;">
-                    <strong>La técnica:</strong> Cuando se incumpla con el objeto de esta garantía, de acuerdo con lo
-                    establecido en la oferta y este contrato.
-                  </p>
-                </div>
-              </div>
-
-              <!-- Opción 2.1: Contratos >= 50k, Con Anticipo -->
-              <div *ngIf="contratoData.clausulaSeptimaGarantiasOpcion === 'opcion2_1'">
-                <p style="margin-bottom: 1em;">
-                  En este contrato se rendirán las siguientes garantías:
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>De fiel cumplimiento del contrato. -</strong> Para seguridad del cumplimiento del contrato
-                  <strong>EL CONTRATISTA</strong> al momento de la firma del contrato, rendirá garantía incondicional,
-                  irrevocable y de cobro inmediato, por un monto equivalente al <strong>cinco por ciento (5%)</strong>
-                  del valor del contrato.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  Con cargo a la garantía de fiel cumplimiento se podrán ejecutar las multas que le fueren
-                  impuestas al <strong>CONTRATISTA</strong>.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>De buen uso del anticipo. -</strong> EL CONTRATISTA para recibir el anticipo estipulado,
-                  deberá rendir previamente garantía incondicional, irrevocable y de cobro inmediato, por igual valor
-                  del anticipo.
-                </p>
-
-                <!-- Garantía Técnica obligatoria para Opción 2.1 -->
-                <p style="margin-bottom: 1em;">
-                  <strong>Garantía Técnica.-</strong> Como el presente contrato de obras involucra la entrega de bienes,
-                  para asegurar la calidad y buen funcionamiento de los bienes, al momento de la suscripción del
-                  contrato
-                  y como parte integrante del mismo, <strong>EL CONTRATISTA</strong> entrega una garantía
-                  {{ getTipoGarantiaTecnicaTexto() }}, la que entrará en vigencia a partir de la entrega
-                  recepción de los bienes y se mantendrá vigente por el lapso de
-                  <strong>{{ contratoData.plazoGarantiaTecnica }}</strong>.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>Devolución de las garantías. -</strong> Las garantías entregadas se devolverán así:
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  La garantía de fiel cumplimiento del contrato, a la suscripción del acta de entrega-recepción de las
-                  obras a entera satisfacción de <strong>LA CONTRATANTE</strong>.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  La garantía de buen uso del anticipo, una vez devengado el anticipo, o entregadas por parte del
-                  <strong>CONTRATISTA</strong> a entera satisfacción de <strong>LA CONTRATANTE</strong> las obras
-                  contratadas.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  La garantía técnica se devolverá una vez cumplido su plazo de vigencia y verificado el buen
-                  funcionamiento de los bienes a satisfacción de <strong>LA CONTRATANTE</strong>.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>Ejecución de las garantías. -</strong> Las garantías contractuales podrán ser ejecutadas por
-                  <strong>LA CONTRATANTE</strong> en los siguientes casos:
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>La de fiel cumplimiento del contrato:</strong>
-                </p>
-                <p style="margin-bottom: 1em; padding-left: 20px;">
-                  <strong>a)</strong> Cuando <strong>LA CONTRATANTE</strong> declare anticipada y unilateralmente
-                  terminado el contrato por causas imputables al <strong>CONTRATISTA</strong>.
-                </p>
-                <p style="margin-bottom: 1em; padding-left: 20px;">
-                  <strong>b)</strong> Si <strong>EL CONTRATISTA</strong> no la renovare <strong>cinco (5) días</strong>
-                  antes de su vencimiento.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>La de buen uso del anticipo:</strong>
-                </p>
-                <p style="margin-bottom: 1em; padding-left: 20px;">
-                  <strong>a)</strong> Si <strong>EL CONTRATISTA</strong> no la renovare <strong>cinco (5) días</strong>
-                  antes de su vencimiento.
-                </p>
-                <p style="margin-bottom: 1em; padding-left: 20px;">
-                  <strong>b)</strong> En caso de que <strong>EL CONTRATISTA</strong> no devuelva el saldo del anticipo,
-                  después de <strong>diez días</strong> de requerimiento por escrito por parte de <strong>LA
-                    CONTRATANTE</strong>;
-                </p>
-                <p style="margin-bottom: 1em; padding-left: 20px;">
-                  <strong>c)</strong> En caso de terminación unilateral del contrato y que <strong>EL
-                    CONTRATISTA</strong>
-                  no pague a <strong>LA CONTRATANTE</strong> el saldo adeudado del anticipo, después de <strong>diez
-                    días</strong>
-                  de notificado con la liquidación del contrato.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>La técnica:</strong> Cuando se incumpla con el objeto de esta garantía, de acuerdo con lo
-                  establecido en la oferta y este contrato.
-                </p>
-              </div>
-
-              <!-- Opción 2.2: Contratos >= 50k, Sin Anticipo -->
-              <div *ngIf="contratoData.clausulaSeptimaGarantiasOpcion === 'opcion2_2'">
-                <p style="margin-bottom: 1em;">
-                  En este contrato se rendirán las siguientes garantías:
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>De fiel cumplimiento del contrato. -</strong> Para seguridad del cumplimiento del contrato
-                  <strong>EL CONTRATISTA</strong> al momento de la firma del contrato, rendirá garantía incondicional,
-                  irrevocable y de cobro inmediato, por un monto equivalente al <strong>cinco por ciento (5%)</strong>
-                  del valor del contrato.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  Con cargo a la garantía de fiel cumplimiento se podrán ejecutar las multas que le fueren
-                  impuestas al <strong>CONTRATISTA</strong>.
-                </p>
-
-                <!-- Garantía Técnica obligatoria para Opción 2.2 -->
-                <p style="margin-bottom: 1em;">
-                  <strong>Garantía Técnica.-</strong> Como el presente contrato de obras involucra la entrega de bienes,
-                  para asegurar la calidad y buen funcionamiento de los bienes, al momento de la suscripción del
-                  contrato
-                  y como parte integrante del mismo, <strong>EL CONTRATISTA</strong> entrega una garantía
-                  {{ getTipoGarantiaTecnicaTexto() }}, la que entrará en vigencia a partir de la entrega
-                  recepción de los bienes y se mantendrá vigente por el lapso de
-                  <strong>{{ contratoData.plazoGarantiaTecnica }}</strong>.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>Devolución de las garantías. -</strong> Las garantías entregadas se devolverán así:
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  La garantía de fiel cumplimiento del contrato, a la suscripción del acta de entrega-recepción de las
-                  obras a entera satisfacción de <strong>LA CONTRATANTE</strong>.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  La garantía técnica se devolverá una vez cumplido su plazo de vigencia y verificado el buen
-                  funcionamiento de los bienes a satisfacción de <strong>LA CONTRATANTE</strong>.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>Ejecución de las garantías. -</strong> Las garantías contractuales podrán ser ejecutadas por
-                  <strong>LA CONTRATANTE</strong> en los siguientes casos:
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>La de fiel cumplimiento del contrato:</strong>
-                </p>
-                <p style="margin-bottom: 1em; padding-left: 20px;">
-                  <strong>a)</strong> Cuando <strong>LA CONTRATANTE</strong> declare anticipada y unilateralmente
-                  terminado el contrato por causas imputables al <strong>CONTRATISTA</strong>.
-                </p>
-                <p style="margin-bottom: 1em; padding-left: 20px;">
-                  <strong>b)</strong> Si <strong>EL CONTRATISTA</strong> no la renovare <strong>cinco (5) días</strong>
-                  antes de su vencimiento.
-                </p>
-
-                <p style="margin-bottom: 1em;">
-                  <strong>La técnica:</strong> Cuando se incumpla con el objeto de esta garantía, de acuerdo con lo
-                  establecido en la oferta y este contrato.
-                </p>
-              </div>
-            </ng-container> <!-- End Cláusula Séptima conditional -->
-
-            <p class="contract-paragraph"><strong>Cláusula Octava. -PLAZO. -</strong> El plazo para la entrega de la
-              totalidad de los
-              bienes
-              <select [(ngModel)]="contratoData.clausulaOctavaEstadoBienes" style="width: 200px; margin: 0 5px;">
-                <option value="">Seleccione estado</option>
-                <option value="contratados">contratados</option>
-                <option value="instalados">instalados</option>
-                <option value="puesto_en_funcionamiento">puesto en funcionamiento</option>
-              </select>
-              , así como (la capacitación de ser el caso)
-              <!-- <input type="text" [(ngModel)]="contratoData.clausulaOctavaCapacitacion"
-                placeholder="Capacitación" style="width: 300px;"> -->
-              a entera
-              satisfacción de la contratante es de <input type="text"
-                [(ngModel)]="contratoData.clausulaOctavaPeriodoPlazo" placeholder="Período del plazo"
-                style="width: 150px;">, contado a partir de <input type="text"
-                [(ngModel)]="contratoData.clausulaOctavaInicioPlazo" placeholder="Inicio del plazo"
-                style="width: 200px;">.
-            </p>
-            <p class="contract-paragraph"><strong>Cláusula Novena. - PRÓRROGAS DE PLAZO. -</strong> La contratante
-              prorrogará el plazo
-              total o los plazos parciales en los
-              siguientes casos, y siempre que el contratista así lo solicitare por escrito, justificando los fundamentos
-              de la
-              solicitud, dentro del plazo de <strong>5 (cinco) días</strong> siguientes a la fecha de producido el hecho
-              que motiva la
-              solicitud:</p>
-            <p class="contract-paragraph"><strong>a)</strong> Por fuerza mayor o caso fortuito aceptado como tal por la
-              contratante. Tan
-              pronto desaparezca la causa de
-              fuerza mayor o caso fortuito, el contratista está obligado a continuar con la ejecución del contrato, sin
-              necesidad de que medie notificación por parte de la contratante para reanudarlo.</p>
-            <p class="contract-paragraph"><strong>b)</strong> Cuando la contratante ordenare aumentos de los bienes o
-              cambios.</p>
-            <p class="contract-paragraph">En caso de prórroga de plazo las partes elaborarán un nuevo cronograma de la
-              ejecución de las obligaciones
-              contractuales que suscrito por ellas, sustituirá al original o precedente y tendrá el mismo valor
-              contractual
-              del sustituido.</p>
-            <p class="contract-paragraph"><strong>Cláusula Décima. – MULTAS. -</strong> Por cada día de retraso en la
-              ejecución de las
-              obligaciones contractuales o por
-              cualquier incumplimiento de las obligaciones que adquiera el CONTRATISTA, se aplicará la multa diaria de
-              <input type="text" [(ngModel)]="contratoData.clausulaDecimaPorcentajeMulta"
-                placeholder="% Multa, recomendado mayor a 1% del monto total " style="width: 80px;">, del valor del
-              contrato.
-            </p>
-            <p class="contract-paragraph"><strong>Cláusula Undécima. - OTRAS OBLIGACIONES DEL CONTRATISTA. -</strong>El
-              contratista se
-              obliga a ejecutar el contrato,
-              sobre la base de las especificaciones técnicas; y en tal virtud, no podrá aducir error, falencias o
-              cualquier
-              inconformidad con ellos.</p>
-            <p class="contract-paragraph">El contratista se compromete durante la ejecución del contrato, a facilitar a
-              las personas designadas por la
-              contratante, toda la información y documentación que éstas soliciten para disponer de un pleno
-              conocimiento
-              técnico relacionado con la ejecución del contrato, así como de los eventuales problemas técnicos que
-              puedan
-              plantearse con relación a los bienes, y de las tecnologías, métodos y herramientas utilizadas para
-              resolverlos.
-            </p>
-            <p class="contract-paragraph">Los delegados o responsables técnicos de la contratante deberán tener el
-              conocimiento suficiente de la ejecución
-              del contrato, así como la eventual realización de ulteriores desarrollos. Para el efecto, el contratista
-              se
-              compromete durante el tiempo de ejecución contractual, a facilitar a las personas designadas por la
-              entidad
-              contratante toda la información y documentación que le sea requerida, relacionada y/o atinente al
-              desarrollo y
-              ejecución del contrato.</p>
-            <p class="contract-paragraph">Queda expresamente establecido que constituye obligación del contratista
-              ejecutar el contrato conforme a las
-              especificaciones técnicas establecidas.</p>
-            <p class="contract-paragraph">El contratista está obligado a cumplir con cualquiera otra que se derive
-              natural y legalmente del objeto del
-              contrato y sea exigible por constar en cualquier documento de éste o en norma legal específicamente
-              aplicable.
-            </p>
-            <p class="contract-paragraph">El contratista se obliga al cumplimiento de las disposiciones establecidas en
-              el Código del Trabajo y en la Ley
-              del Seguro Social ObligatorIO, adquiriendo, respecto de sus trabajadores, la calidad de patrono, sin que
-              la
-              contratante tenga responsabilidad alguna por tales cargas, ni relación con el personal que labore en la
-              ejecución del contrato. En consecuencia la contratante está exenta de toda obligación respecto del
-              personal del
-              contratista.</p>
-            <p class="contract-paragraph">El contratista se obliga al cumplimiento de lo previsto en su oferta y a lo
-              establecido en la legislación
-              ambiental, de seguridad industrial y salud ocupacional, seguridad social, laboral, etc.</p>
-            <p class="contract-paragraph"><strong>EL CONTRATISTA</strong> se obliga a dar cumplimiento a lo establecido
-              en el <strong>Instructivo para la compra de productos y/o
-                servicios en los proyectos vigente: Normas INEN (ISO 9001: 2015, ISO 45001:2018, ISO 14001:2018, ISO
-                37001:2016)</strong>; y observar el código de ética de ambas partes, así como los procedimientos y otras
-              normativas
-              aplicables, por tanto, la relación contractual se regirá por una conducta ética entre ambas.</p>
-            <p class="contract-paragraph"><strong>EL CONTRATISTA</strong> se compromete a cumplir de forma estricta,
-              fiel, y oportuna,
-              todas y cada una de las disposiciones
-              de Seguridad Industrial, Reglamento de Seguridad y Salud, Procedimiento de Seguridad, Salud en el Trabajo
-              y
-              Medio Ambiente para contratistas, y cualquier norma, política o indicación por parte de <strong>HIDALGO E
-                HIDALGO S.A.</strong>
-              relacionada con seguridad y riesgos. <strong>EL CONTRATISTA</strong> será el único responsable de daños y
-              accidentes que le
-              pudieren afectar.</p>
-            <p class="contract-paragraph"><strong>Cláusula Duodécima. - OBLIGACIONES DE LA CONTRATANTE. -</strong> Son
-              obligaciones de la
-              contratante, principalmente pagar
-              el precio estipulado, y entregar al contratista las facilidades del caso, para la ejecución del contrato.
-            </p>
-            <p class="contract-paragraph"><strong>Cláusula Décima Tercera. - CONFIDENCIALIDAD Y NO DIVULGACIÓN DE
-                PROCESOS e INFORMACIÓN DE LA COMPAÑÍA. –</strong></p>
-            <p class="contract-paragraph"><strong>HIDALGO E HIDALGO S.A.</strong> es propietaria de tecnología valiosa y
-              secretos
-              empresariales relacionados con su objeto
-              social, afines con su actividad en el campo de la construcción principalmente y otros como procesos
-              agrícolas y
-              comerciales e industriales, que pueden denominarse como <strong>"TECNOLOGÍA O PROPIEDAD
-                INDUSTRIAL”</strong> que incluye además
-              todo lo previsto y comprendido como <strong>"secreto industrial”</strong> o bien <strong>“secreto
-                empresarial"</strong> por la anterior Decisión
-              N.º 344 y la actual 486 de la Comisión del Acuerdo de Cartagena, especialmente en el Capítulo II "De los
-              Secretos Empresariales", y comprende todo lo relacionado con información, prácticas, procesamientos y
-              procesos
-              registrados o no.</p>
-            <p class="contract-paragraph">El contratista debido a las características de su trabajo tiene o puede tener
-              acceso a la indicada <strong>"Tecnología"</strong>,
-              <strong>"Propiedad Industrial"</strong> o <strong>“secretos empresariales”</strong>, o a partes de ellos.
-            </p>
-            <p class="contract-paragraph">Se considerará como secreto empresarial cualquier información no divulgada a
-              terceros fuera de la empresa que
-              <strong>HIDALGO E HIDALGO S.A.</strong> o sus relacionadas legítimamente posea, que pueda usarse en alguna
-              actividad
-              constructiva, productiva, industrial o comercial, y que sea susceptible de transmitirse a un tercero.
-            </p>
-            <p class="contract-paragraph">Con el propósito de dar adecuado cumplimiento a las disposiciones legales
-              aplicables a la materia, y evitar
-              daños, ya a la <strong>CONTRATANTE</strong>, ya al contratista, y protegerse de una eventual competencia
-              desleal, el contratista,
-              (<strong>empleados, asesores, empresas subsidiarias, afiliadas, y colabores de esa empresa</strong>) se
-              compromete debidamente
-              advertido y conociendo la necesidad de protección y adecuado manejo de la información, tecnología,
-              conocimiento
-              y secretos empresariales de la <strong>CONTRATANTE</strong>, a:</p>
-            <p class="contract-paragraph">Mantener bajo condiciones de absoluta y estricta confidencialidad toda la
-              información escrita, oral, o
-              electrónica, no pública, registrada o no, que haya recibido desde el inicio de su vinculación con la
-              <strong>CONTRATANTE</strong>, reciba o intercambie o conozca debido a/o como resultado de su trabajo,
-              servicios, o actividades
-              que realiza en virtud de este contrato. Sea que las conozca o llegue a conocer indirecta o directamente,
-              por
-              reuniones o charlas presenciales, telefónicas, videoconferencias, o por cualquier otro medio o soporte
-              tecnológico; por ideas comunicadas, conceptos, know-how, técnicas, diseños, estrategias, pliegos de
-              contratación, especificaciones, planos, cuadros, datos, memorias de cálculo, programas de computación,
-              planes de
-              marketing, o cualquier actividad a desarrollar en cumplimiento de su relación contractual con la compañía
-              <strong>Hidalgo e Hidalgo S.A.</strong>
-            </p>
-            <p class="contract-paragraph">Conforme al <strong>artículo 115 del CÓDIGO ORGÁNICO DE LA ECONOMÍA SOCIAL DE
-                LOS CONOCIMIENTOS</strong>, la titularidad de todos
-              los diseños, diagramas, procesos y procedimientos constructivos y en general de toda mejora, desarrollo,
-              novedad, manual, sistema u obra creada bajo relación contractual o por encargo de la
-              <strong>CONTRATANTE</strong>, corresponderá
-              a <strong>Hidalgo e Hidalgo S.A.</strong> Queda establecido que toda obra o creación, invención o
-              desarrollo se considerará de
-              titularidad de la <strong>CONTRATANTE</strong> y la obra creada como bajo la contratación y/o por encargo.
-            </p>
-            <p class="contract-paragraph">La inobservancia y/o vulneración de la presente obligación será causa
-              suficiente para la terminación unilateral
-              de la relación contractual y será justa causa para que <strong>HIDALGO E HIDALGO S.A.</strong>, ejerza las
-              acciones legales
-              correspondientes, en calidad de <strong>CONTRATANTE</strong> propietario de la información, tecnología o
-              secreto empresarial, y,
-              pueda reclamar las indemnizaciones y reparaciones a que haya lugar.</p>
-            <p class="contract-paragraph">Dentro de la información confidencial se incluyen las técnicas, procesos,
-              metodologías, estrategias y similares
-              desarrolladas durante las labores y trabajos específicos y generales desempeñados por el contratista de
-              <strong>Hidalgo
-                e Hidalgo S.A.</strong> en la actividad objeto de este contrato y/o cualquier actividad dentro de la
-              empresa; por lo que,
-              en estricta observancia de la obligación de confidencialidad, no podrá hacer uso de esa información
-              confidencial,
-              registrada o no, luego de concluida su relación contractual con la <strong>CONTRATANTE</strong>, sin
-              autorización y
-              conocimiento de ésta.
-            </p>
-            <p class="contract-paragraph">La experiencia general y/o específica así adquirida por el contratista durante
-              su relación con <strong>Hidalgo e Hidalgo
-                S.A.</strong> solo podrá ser utilizada en beneficio propio o de terceros, previa autorización y
-              valoración económica
-              entre el contratista y la compañía <strong>Hidalgo e Hidalgo S.A.</strong>; y para incluir tal experiencia
-              en ofertas y
-              compromisos precontractuales y contractuales públicos y/o privados, se requerirá igual autorización y
-              valoración.
-              Para incluir tal experiencia o información confidencial en promociones, hojas de vida o similares,
-              el contratista se obliga a solicitar la autorización escrita de <strong>Hidalgo e Hidalgo S.A.</strong> y
-              a indemnizar a la
-              compañía en caso de no hacerlo.</p>
-            <p class="contract-paragraph">El contratista se compromete a abstenerse de revelar aspecto alguno del
-              contenido de la información confidencial,
-              conocimiento y secretos empresariales conforme a lo estipulado en esta cláusula, a menos que se obtenga el
-              consentimiento escrito de la compañía <strong>HIDALGO E HIDALGO S.A.</strong></p>
-            <p class="contract-paragraph">La presente declaración y compromiso de guardar confidencialidad y/o reserva
-              es de carácter permanente por lo que
-              se mantendrá durante el tiempo que dure la relación contractual, y se extenderá indefinidamente una vez
-              finalizada ésta.</p>
-            <p class="contract-paragraph">El contratista respecto de la <strong>CONTRATANTE</strong>, para todo efecto
-              será considerado
-              como confidente, y la <strong>CONTRATANTE</strong>
-              permitirá que éste acceda al conocimiento de su <strong>"Tecnología, procesos, conocimiento, técnica y
-                secretos
-                empresariales”</strong> solo bajo la condición de que el contratista no revele esa información, secretos
-              e
-              investigaciones y no la use en su propio beneficio o el de terceros, por sí o por interpuesta persona en
-              cualquier
-              tiempo y lugar, sin el consentimiento expreso y por escrito de <strong>Hidalgo e Hidalgo S.A.</strong></p>
-            <p class="contract-paragraph"><strong>CONFIDENCIALIDAD, TRATAMIENTO ADECUADO Y PROTECCIÓN DE DATOS
-                PERSONALES. –</strong></p>
-            <p class="contract-paragraph">En caso de que, en el marco de la ejecución del presente contrato, el
-              contratista acceda, obtenga o trate de
-              cualquier modo datos personales de los que la <strong>CONTRATANTE</strong> es responsable, se compromete a
-              tratar y conservar
-              dichos datos, de conformidad con la <strong>Política de Protección de Datos de la CONTRATANTE</strong>, la
-              <strong>Ley Orgánica de
-                Protección de Datos Personales</strong>, el <strong>Reglamento General a la Ley Orgánica de Protección
-                de Datos Personales</strong> y
-              demás normativa conexa.
-            </p>
-            <p class="contract-paragraph">En particular, el contratista se compromete a tratar dichos datos
-              exclusivamente para las finalidades
-              establecidas en este contrato y de conformidad con las instrucciones impartidas por la
-              <strong>CONTRATANTE</strong>. Asimismo, se
-              compromete a conservar y tratar los datos, empleando medidas de seguridad de la información adecuadas
-              según el
-              estado del arte y el tipo de industria, y a garantizar la protección de datos personales desde el diseño y
-              por
-              defecto, limitándose estrictamente a los tratamientos relacionados con los fines de la contratación.
-            </p>
-            <p class="contract-paragraph">El contratista deberá notificar a la <strong>CONTRATANTE</strong> de forma
-              inmediata en caso de
-              que conozca una vulneración a la
-              seguridad de la información que comprometa los datos personales de la <strong>CONTRATANTE</strong>.</p>
-            <p class="contract-paragraph">De igual forma, en caso de que un titular de datos personales solicite ejercer
-              los derechos contemplados en la
-              <strong>Ley Orgánica de Protección de Datos Personales</strong>, con relación a datos personales de los
-              que la <strong>CONTRATANTE</strong> es
-              responsable, el contratista deberá notificar a la <strong>CONTRATANTE</strong> de manera inmediata, y
-              deberá colaborar
-              activamente en la atención y respuesta a la solicitud, dentro de los términos establecidos en la
-              <strong>Ley Orgánica de
-                Protección de Datos Personales</strong>.
-            </p>
-            <p class="contract-paragraph">El contratista reconoce expresamente su obligación de eliminar o devolver la
-              información que contenga datos
-              personales de los que la <strong>CONTRATANTE</strong> sea responsable, una vez terminada la relación
-              comercial, o cuando la
-              <strong>CONTRATANTE</strong> lo solicite de forma expresa, siempre que no exista obligación legal de
-              conservarla.
-            </p>
-            <p class="contract-paragraph">El contratista no podrá realizar copias de seguridad no autorizadas ni
-              transferir la información que contenga
-              datos personales, salvo que la <strong>CONTRATANTE</strong> hubiera dado su autorización previa por
-              escrito; o exista orden de
-              una autoridad judicial o administrativa competente, sin perjuicio de la obligación del contratista de
-              notificar
-              dicha circunstancia a la <strong>CONTRATANTE</strong> en un plazo máximo de <strong>2 días</strong> desde
-              su conocimiento.</p>
-            <p class="contract-paragraph">El contratista libera a la <strong>CONTRATANTE</strong>, de cualquier
-              responsabilidad derivada
-              de una indebida obtención y
-              tratamiento de datos personales, que no cuente con autorización por escrito por parte de la
-              <strong>CONTRATANTE</strong>, lo que
-              incluye las multas impuestas por la autoridad de control, y se obliga a indemnizarla en caso de ser
-              sancionada,
-              siempre que se compruebe el mal tratamiento por parte del contratista. Esto implica expresamente la
-              posibilidad
-              de repetir el valor de la o las sanciones impuestas a la <strong>CONTRATANTE</strong> por incumplimiento o
-              negligencia del
-              contratista en relación con un mal tratamiento de datos personales, según disponga la <strong>Autoridad de
-                Protección de
-                Datos</strong>.
-            </p>
-            <p class="contract-paragraph">En caso de que se determine que el contratista tiene la calidad de encargado
-              del tratamiento de datos personales
-              en nombre de la <strong>CONTRATANTE</strong>, las partes suscribirán un contrato de encargo, independiente
-              del contrato
-              principal, en el que se establecerán las instrucciones concretas del Responsable al Encargado para el
-              tratamiento
-              de Datos. Para efecto de la suscripción del contrato de Encargo, la <strong>CONTRATANTE</strong> se
-              reserva el
-              derecho de verificar que el contratista cuente con medidas técnicas, jurídicas y organizacionales
-              suficientes
-              para garantizar un nivel adecuado de protección de datos personales. En caso de que la
-              <strong>CONTRATANTE</strong> determine que
-              el contratista no está en la capacidad de garantizar un nivel adecuado de protección de datos personales,
-              y el
-              tratamiento sea indispensable para la ejecución del contrato principal, la <strong>CONTRATANTE</strong>
-              podrá dar por terminado
-              el contrato principal, sin que dicha terminación le obligue al pago de indemnización alguna.
-            </p>
-            <p class="contract-paragraph">El contratista declara que conoce la <strong>Política de Protección y
-                Tratamiento de Datos Personales</strong> que consta en la
-              siguiente dirección: <strong>“http://www.heh.com.ec.”</strong></p>
-            <p class="contract-paragraph"><strong>Cláusula Décima Cuarta. - CONTRATOS COMPLEMENTARIOS. -</strong> Por
-              causas
-              justificadas, las partes podrán firmar
-              contratos complementarios.</p>
-            <p class="contract-paragraph"><strong>Cláusula Décima Quinta. – NATURALEZA. -</strong> El presente Contrato
-              es de naturaleza
-              civil, por consiguiente, serán
-              aplicables las normas del Código Civil y demás normativa pertinente. <strong>EL CONTRATISTA</strong>
-              declara conocer la normativa
-              Laboral Ecuatoriana contenida tanto en el Código del Trabajo vigente como en sus respectivos Reglamentos,
-              leyes
-              especiales y demás normas relacionadas con el ámbito laboral y de seguridad social.</p>
-            <p class="contract-paragraph">Por lo tanto, <strong>LA CONTRATANTE</strong> no tendrá ninguna obligación
-              laboral ni de
-              seguridad social con <strong>EL CONTRATISTA</strong>, por
-              lo que no están ni se entienden incorporadas al presente Contrato las disposiciones del Código del Trabajo
-              ni
-              las demás relativas a este tipo de relaciones. Por tanto, las Partes contratantes no podrán invocar las
-              disposiciones contenidas en las Leyes laborales y prestacionales en cualquier disputa, interpretación, o
-              reclamo
-              que tuvieren. La presente relación queda especial y expresamente excluida de cualquier liquidación,
-              indemnización o remuneración que pudiere causarse por la aplicación de cualquier ley laboral o relacionada
-              con
-              el régimen laboral y de seguridad social a la finalización del presente Contrato.</p>
-            <p class="contract-paragraph">De igual forma <strong>EL CONTRATISTA</strong> se compromete a cumplir a
-              cabalidad con los
-              compromisos contractuales que adquiera
-              frente a terceros para la prestación del presente Contrato.</p>
-            <p class="contract-paragraph"><strong>Cláusula Décima Sexta. - TERMINACIÓN DEL CONTRATO. -</strong> El
-              presente contrato
-              termina:</p>
-            <p class="contract-paragraph">Por cumplimiento de las obligaciones contractuales;</p>
-            <p class="contract-paragraph">Por mutuo acuerdo de las partes;</p>
-            <p class="contract-paragraph">Por sentencia o laudo ejecutoriados que declare la nulidad del contrato o su
-              resolución;</p>
-            <p class="contract-paragraph">Por declaración unilateral de la contratante, en caso de incumplimiento del
-              contratista;</p>
-            <p class="contract-paragraph">En caso de persona natural por muerte del contratista; en caso de persona
-              jurídica por disolución de la persona
-              jurídica contratista que no se origine en decisión interna voluntaria de los órganos competentes de tal
-              persona
-              jurídica; y,</p>
-            <p class="contract-paragraph">Por vulnerar el contratista el compromiso de confidencialidad, tratamiento
-              adecuado y protección de datos
-              personales que asume al celebrar este contrato, o por haber cedido su obligación contractual</p>
-            <p class="contract-paragraph"><strong>Terminación por causas imputables a la contratante. –</strong> El
-              contratista podrá
-              demandar la resolución del contrato
-              por incumplimiento culposo por parte de la contratante de sus obligaciones contractuales por más de
-              (<em>plazo a definir según complejidad</em>),
-              sin que medie fuerza mayor o caso fortuito.</p>
-            <p class="contract-paragraph"><strong>Cláusula Décima Séptima. - Terminación por mutuo acuerdo.-</strong>
-              Cuando por
-              circunstancias imprevistas, técnicas o
-              económicas, o causas de fuerza mayor o caso fortuito, no fuere posible o conveniente para los intereses de
-              las
-              partes, ejecutar total o parcialmente el contrato, podrán, por mutuo acuerdo convenir en la extinción de
-              todas o
-              algunas de las obligaciones contractuales, en el estado en que se encuentren.
-              La terminación por mutuo acuerdo no implicará renuncia a derechos causados o adquiridos en favor de la
-              Contratante o del contratista.</p>
-            <p class="contract-paragraph"><strong>Cláusula Décima Octava. - Terminación unilateral del contrato.
-                -</strong> La
-              Contratante podrá declarar terminado
-              anticipada y unilateralmente el presente contrato:</p>
-            <p class="contract-paragraph"><strong>1.</strong> Por incumplimiento del contratista;
-              <strong>2.</strong> En caso de persona jurídica por quiebra; en caso de persona natural por insolvencia
-              del contratista;
-              <strong>3.</strong> Si el valor de las multas supera el <strong>5%</strong> del valor del contrato;
-              <strong>4.</strong> Por suspensión del contrato, por decisión del contratista, por más de (<em>plazo a
-                definir según complejidad</em>), sin que medie fuerza mayor o
-              caso fortuito;
-              <strong>5.</strong> Por haber cedido el contratista su obligación contractual;
-              <strong>6.</strong> Por vulnerar el vendedor el compromiso de confidencialidad, tratamiento adecuado y
-              protección de datos
-              personales estipulado en este contrato.
-            </p>
-            <p class="contract-paragraph"><strong>7.</strong> En el caso de haberse rendido garantías, por no renovarlas
-              con al menos
-              <strong>cinco días</strong> anteriores a su vencimiento.
-            </p>
-            <p class="contract-paragraph"><strong>Cláusula Décima Novena. - RECEPCIÓN. -</strong> La recepción de los
-              bienes objeto de la
-              contratación se realizará a entera
-              satisfacción de la contratante, la que podrá presentar reclamos al contratista por bienes defectuosos, los
-              que
-              deberán ser atendidos por éste, a su costa.</p>
-            <p class="contract-paragraph"><strong>Cláusula Vigésima - ACTA DE RECEPCIÓN. -</strong> La constancia de
-              entrega-recepción de
-              los bienes constará en acta
-              suscrita por las partes, en la que se dejará constancia de los antecedentes, recepción de los bienes a
-              entera
-              satisfacción, y liquidación económica.</p>
-            <p class="contract-paragraph">Al efecto, las partes integrarán una comisión de recepción con los delegados
-              que designen, quienes dejarán
-              expresa constancia del cabal cumplimiento del objeto contractual, a entera satisfacción de la contratante.
-            </p>
-            <p class="contract-paragraph">Los integrantes de la comisión serán civil y penalmente responsables por sus
-              aseveraciones. Hará parte del acta
-              de entrega-recepción, la liquidación económica del contrato.</p>
-            <p class="contract-paragraph"><strong>Cláusula Vigésima Primera. - TRIBUTOS, RETENCIONES Y GASTOS.
-                -</strong> La contratante
-              efectuará al contratista las
-              retenciones que dispongan las leyes tributarias, actuará como agente de retención del Impuesto a la Renta
-              e
-              Impuesto al Valor Agregado, al efecto procederá conforme la legislación tributaria vigente.</p>
-            <p class="contract-paragraph">La contratante retendrá el valor de los descuentos que el Instituto
-              Ecuatoriano de Seguridad Social ordenare y
-              que corresponda a mora patronal, por obligaciones con el seguro social provenientes de servicios
-              personales para
-              la ejecución del contrato de acuerdo con la Ley de Seguridad Social.</p>
-            <p class="contract-paragraph"><strong>Cláusula Vigésima Segunda. - SOLUCIÓN DE CONTROVERSIAS. -</strong>
-              Toda controversia
-              que derive de la interpretación o
-              cumplimiento de este contrato, las partes acuerdan someterla a arbitraje, en el <strong>Centro de
-                Arbitraje y Mediación
-                de la Cámara de Comercio de Quito</strong>, que se sujetará a lo dispuesto en la Ley de Arbitraje y
-              Mediación, y
-              al Reglamento
-              que regule el funcionamiento de dicho centro de arbitraje y a las siguientes normas:</p>
-            <p class="contract-paragraph">El arbitraje será en derecho;</p>
-            <p class="contract-paragraph">Los árbitros serán seleccionados de acuerdo con lo establecido en el
-              Reglamento del Centro de Arbitraje de la
-              Cámara de Comercio de Quito y podrán pedir la ejecución de medidas cautelares, solicitando el auxilio de
-              funcionarios públicos, judiciales, policiales y administrativos sin que sea necesario recurrir a juez
-              ordinario
-              alguno para tales efectos.</p>
-            <p class="contract-paragraph">El arbitraje será confidencial.</p>
-            <p class="contract-paragraph">Las partes renuncian a la jurisdicción ordinaria, y se obligan a acatar el
-              laudo que expida el Tribunal Arbitral.
-            </p>
-            <p class="contract-paragraph">El lugar del arbitraje será las instalaciones de la Cámara de Comercio de
-              Quito.</p>
-            <p class="contract-paragraph">La legislación aplicable a este contrato es la ecuatoriana.</p>
-            <p class="contract-paragraph"><strong>DE LA NULIDAD. -</strong> Si cualquiera de las estipulaciones de este
-              Contrato fuere
-              declarada nula, ilegal, inválida o
-              inejecutable por una autoridad judicial o arbitral competente, las demás disposiciones permanecerán con
-              pleno
-              vigor y eficacia.</p>
-            <p class="contract-paragraph"><strong>Cláusula Vigésima Tercera. - COMUNICACIONES ENTRE LAS PARTES.
-                –</strong> Para todos los
-              efectos de este contrato, las
-              partes convienen en señalar su domicilio en la ciudad de Quito.</p>
-            <p class="contract-paragraph">Todas las comunicaciones, sin excepción, entre las partes, relativas a este
-              contrato, serán formuladas por
-              escrito o por medios electrónicos y en idioma español, a las siguientes direcciones:</p>
-            <p class="contract-paragraph"><strong>DE LA CONTRATANTE:</strong> Provincia PICHINCHA, Cantón QUITO,
-              Parroquia LA CONCEPCION,
-              Ciudadela KENNEDY, Calle Av. Galo
-              Plaza Lasso, Número: N51-127 Intersección: Algarrobos, Teléfono: 3822720, correo electrónico <input
-                type="email" [(ngModel)]="contratoData.contratanteCorreoComunicaciones" placeholder="Correo Contratante"
-                style="width: 250px;"></p>
-            <p class="contract-paragraph"><strong>DEL CONTRATISTA:</strong> Provincia <input type="text"
-                [(ngModel)]="contratoData.contratistaProvinciaComunicaciones" placeholder="Provincia"
-                style="width: 150px;">, Cantón <input type="text"
-                [(ngModel)]="contratoData.contratistaCantonComunicaciones" placeholder="Cantón" style="width: 150px;"> ,
-              Parroquia <input type="text" [(ngModel)]="contratoData.contratistaParroquiaComunicaciones"
-                placeholder="Parroquia" style="width: 150px;">, Dirección <input type="text"
-                [(ngModel)]="contratoData.contratistaDireccionComunicaciones" placeholder="Dirección"
-                style="width: 250px;">
-              Número <input type="text" [(ngModel)]="contratoData.contratistaNumeroComunicaciones" placeholder="Número"
-                style="width: 80px;">., Teléfonos: <input type="text"
-                [(ngModel)]="contratoData.contratistaTelefonosComunicaciones" placeholder="Teléfonos"
-                style="width: 150px;"> correo
-              electrónico <input type="email" [(ngModel)]="contratoData.contratistaCorreoComunicaciones"
-                placeholder="Correo Contratista" style="width: 250px;"></p>
-            <p class="contract-paragraph"><strong>Cláusula Vigésima Cuarta. - ACEPTACIÓN DE LAS PARTES. -</strong> Las
-              partes manifiestan
-              que conocen y aceptan el texto
-              íntegro del presente documento; por lo que, libre y voluntariamente declaran su aceptación a todo lo
-              convenido
-              en el presente contrato y se someten a sus estipulaciones.</p>
-            <p class="contract-paragraph">Dado, en la ciudad de San Francisco de Quito, a los <input type="text"
-                [(ngModel)]="contratoData.fechaFirmaContratoDia" placeholder="Día" style="width: 50px;"> días del mes de
-              <input type="text" [(ngModel)]="contratoData.fechaFirmaContratoMes" placeholder="Mes"
-                style="width: 100px;"> de <input type="text" [(ngModel)]="contratoData.fechaFirmaContratoAnio"
-                placeholder="Año" style="width: 70px;">
-            </p>
-            <p class="contract-paragraph"><strong>LA CONTRATANTE</strong></p>
-            <p class="contract-paragraph">______________________</p>
-            <p class="contract-paragraph"><strong>EL CONTRATISTA</strong></p>
-            <p class="contract-paragraph">_______________________</p>
-
-
-          </div> <!-- Fin contract-preview -->
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <!-- Encabezado que se repetirá en cada página -->
+  <div id="contract-content" #contractContent class="contract-content-wrapper">
+
+    <!-- Header que se repetirá en cada página -->
+    <div class="page-header-repeat">
+      <table class="contract-header-table">
+        <tr>
+          <td class="header-cell-logo" rowspan="3">
+            <img src="http://localhost:5221/assets/logo-hidalgo.png" alt="Logo Hidalgo e Hidalgo" class="logo-img"
+              onerror="this.style.display='none';">
+          </td>
+          <td rowspan="3" class="header-cell-title">
+            CONTRATO PARA LA ADQUISICIÓN DE BIENES
+          </td>
+          <td class="header-cell-info"><strong>TIPO:</strong> Documento</td>
+          <td class="header-cell-info"><strong>VERSIÓN:</strong> 2</td>
+        </tr>
+        <tr>
+          <td class="header-cell-detail"><strong>PROCESO:</strong> GESTIÓN EJECUCIÓN Y CONTROL</td>
+          <td class="header-cell-detail"><strong>VIGENCIA:</strong> 01-abril-2025</td>
+        </tr>
+        <tr>
+          <td class="header-cell-info"><strong>CÓDIGO:</strong> ECO-D-08</td>
+          <td class="header-cell-info"><!-- Espacio adicional si necesario --></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Contenido del contrato -->
+    <div class="contract-preview">
+      <div class="contract-paragraph">
+        Comparecen a la celebración del presente contrato, por una parte, la <strong>COMPAÑÍA HIDALGO E HIDALGO
+          S.A.</strong>&nbsp;, con
+        RUC número <strong>1790059111001</strong>,
+        <span [innerHTML]="getRepresentanteContratanteTexto()"></span>
+        a quien en adelante se le denominará <strong>LA CONTRATANTE</strong>; y, por otra parte
+
+        &nbsp;<strong>{{ contratoData.nombreContratista || '[NOMBRE DEL CONTRATISTA]' }}</strong>&nbsp;
+
+        con <strong>RUC No. &nbsp;{{ contratoData.rucContratista || '[RUC_CONTRATISTA]' }}</strong>&nbsp;,
+
+        <!-- Condicional para persona jurídica -->
+        <span *ngIf="contratoData.tipoRepresentanteContratista === 'persona_juridica'">
+          debidamente representada por &nbsp;<strong>{{ contratoData.representanteLegalContratista ||
+            '[REPRESENTANTE_LEGAL]' }}</strong>&nbsp;, según
+          documento que forma parte de este contrato,
+        </span>
+
+        <!-- Para persona natural, no incluir representante -->
+        <span *ngIf="contratoData.tipoRepresentanteContratista === 'persona_natural'">
+          según documento que forma parte de este contrato,
+        </span>
+
+        a quien en adelante se le denominará <strong>EL CONTRATISTA</strong>. Las partes se obligan en virtud del
+        presente contrato, al
+        tenor de las siguientes cláusulas:
+      </div>
+
+
+      <p class="contract-paragraph"><strong>Cláusula Primera. – ANTECEDENTES. -</strong>
+        &nbsp;{{ contratoData.clausulaPrimeraAntecedentes || '[ANTECEDENTES DEL CONTRATO]' }}&nbsp;
+      </p>
+      <p class="contract-paragraph"><strong>Cláusula Segunda. - DOCUMENTOS DEL CONTRATO. -</strong> Forman parte
+        integrante del contrato los siguientes documentos:
+      </p>
+      <p class="contract-paragraph" style="padding-left: 40px;">a) Los documentos de identidad de las partes, y la
+        calidad en que comparecen;</p>
+      <p class="contract-paragraph" style="padding-left: 40px;">b) La oferta presentada por el contratista, con
+        todos sus documentos y anexos que la conforman.</p>
+      <p class="contract-paragraph" style="padding-left: 40px;">
+        c) Las garantías rendidas por el contratista (De ser el caso).
+      </p>
+      <p class="contract-paragraph"><strong>Cláusula Tercera. - DE LA INTERPRETACIÓN. -</strong>&nbsp;Los términos del
+        presente contrato se interpretarán en su sentido
+        literal, a fin de revelar claramente la intención de los contratantes. En todo caso su interpretación
+        sigue las siguientes normas:</p>
+      <ul>
+        <li class="contract-paragraph" style="list-style-type: disc; margin-left: 60px;">Se estará a lo estipulado
+          en el contrato en su sentido natural y obvio, de conformidad con el objeto contractual y la intención de
+          los contratantes. De existir contradicciones entre el contrato y sus documentos, prevalecerán las
+          estipulaciones del contrato y las especificaciones técnicas establecidas por la contratante;</li>
+        <li class="contract-paragraph" style="list-style-type: disc; margin-left: 60px;">Supletoriamente se estará
+          a la oferta;</li>
+        <li class="contract-paragraph" style="list-style-type: disc; margin-left: 60px;">En su falta o
+          insuficiencia se aplicarán las normas contenidas en el Título XIII del Libro IV del Código Civil, "De la
+          Interpretación de los contratos."</li>
+      </ul>
+
+      <!-- Cláusula Cuarta en el contrato -->
+      <p class="contract-paragraph">
+        <strong>Cláusula Cuarta. - OBJETO DEL CONTRATO. -</strong>
+        El contratista se obliga con la contratante a suministrar, instalar y entregar debidamente funcionando los
+        bienes
+        &nbsp;<strong>{{ contratoData.clausulaCuartaDescripcionBienes || '[DESCRIBIRLOS CON PRECISIÓN]'
+          }}</strong>&nbsp;;
+        a ejecutar el contrato a entera satisfacción de la contratante y a entregar los bienes en
+        &nbsp;<strong>{{ contratoData.clausulaCuartaLugarEntrega || '[DESIGNAR LUGAR DE ENTREGA O SITIO]'
+          }}</strong>&nbsp;,
+        según las características y especificaciones técnicas constantes en la oferta, que se agrega y forma parte
+        integrante de este contrato.
+      </p>
+
+      <p class="contract-paragraph">
+        Los bienes a entregarse serán nuevos de fábrica, e incluirán los últimos adelantos tecnológicos, con los
+        respectivos
+        certificados de pruebas y/o ensayos de fabricación y calidad, conforme las indicaciones de la contratante.
+      </p>
+
+      <!-- Cláusula adicional condicional -->
+      <div *ngIf="shouldShowClausulaCuartaAdicional()">
+        <p class="contract-paragraph">
+          Adicionalmente el contratista proporcionará el soporte técnico, los mantenimientos preventivo y
+          correctivo respectivos por el lapso de
+          &nbsp;<strong>{{ contratoData.clausulaCuartaLapsoSoporte || '[LAPSO_SOPORTE_TECNICO]' }}</strong>&nbsp;
+          contados a partir de la fecha de suscripción del acta de entrega recepción de los bienes,
+          periodo que corresponde al de vigencia de la garantía técnica; entregará la documentación de
+          los bienes; y, brindará la capacitación necesaria para
+          &nbsp;<strong>{{ contratoData.clausulaCuartaCapacitacionNumeroServidores || '[NUMERO_SERVIDORES]'
+            }}</strong>&nbsp;
+          servidores <span *ngIf="shouldIncludePersonalCertificado()">en las instalaciones de la entidad contratante,
+            impartida por personal certificado por el fabricante</span>.
+        </p>
+      </div>
+
+      <p class="contract-paragraph"><strong>Cláusula Quinta. - PRECIO DEL CONTRATO. -</strong> El valor del
+        presente contrato, que la contratante pagará al
+        contratista, es el de &nbsp;<strong>{{ contratoData.clausulaQuintaPrecioTotalLetrasNumeros || '[PRECIO_TOTAL]'
+          }}</strong>&nbsp; dólares de los Estados Unidos de América
+        <span *ngIf="contratoData.clausulaQuintaPrecioTotalLetras">
+          (&nbsp;<strong>{{ contratoData.clausulaQuintaPrecioTotalLetras }}</strong>&nbsp;)
+        </span>&nbsp;, &nbsp;más IVA,
+        de conformidad con la oferta presentada por el contratista, valor que se desglosa como se indica a
+        continuación:
+      </p>
+
+      <!-- Imagen de tabla insertada en el texto -->
+      <div *ngIf="uploadedImageUrl" class="tabla-cantidades-container">
+        <img [src]="uploadedImageUrl" alt="Tabla de Cantidades y Precios" class="tabla-cantidades-img">
+      </div>
+
+      <p class="contract-paragraph">Los precios acordados en el contrato por los bienes especificados son fijos,
+        no sujetos a reajuste alguno, y
+        constituirán la única compensación al contratista por todos sus costos, inclusive cualquier impuesto,
+        derecho o
+        tasa que tuviese que pagar, excepto el Impuesto al Valor Agregado que será añadido al precio del contrato.
+      </p>
+
+      <!-- Cláusula Sexta: Forma de Pago -->
+      <ng-container
+        *ngIf="contratoData.clausulaQuintaPrecioTotalLetrasNumeros && contratoData.clausulaQuintaPrecioTotalLetrasNumeros > 0">
+        <p class="contract-paragraph"><strong>Cláusula Sexta. - FORMA DE PAGO. -</strong>
+          &nbsp;<span *ngIf="!contratoData.clausulaSextaFormaPagoOpcion" style="color: #999; font-style: italic;">
+            [SELECCIONE FORMA DE PAGO EN LA CONFIGURACIÓN]
+          </span>&nbsp;
+        </p>
+
+        <!-- Texto dinámico basado en la selección -->
+        <div *ngIf="contratoData.clausulaSextaFormaPagoOpcion === 'con_anticipo'">
+          <p class="contract-paragraph">
+            LA CONTRATANTE entregará al CONTRATISTA, en calidad de anticipo el valor de&nbsp;
+            &nbsp;<strong>{{ contratoData.anexo1ConAnticipoPorcentaje || '[% ANTICIPO]' }}</strong>&nbsp;
+            del valor del contrato, en dólares de los Estados Unidos de América.
+          </p>
+
+          <p class="contract-paragraph">
+            El anticipo que la CONTRATANTE otorgue al CONTRATISTA para la provisión de los bienes objeto de este
+            contrato no podrá ser destinado a fines ajenos a esta contratación.
+          </p>
+
+          <p class="contract-paragraph">
+            El valor restante, esto es,
+            &nbsp;<strong>{{ calcularPorcentajeRestante() }}</strong>&nbsp;
+            del valor del contrato que asciende a
+            &nbsp;<strong>USD. {{ contratoData.anexo1ConAnticipoValorRestanteUSD || '[VALOR_RESTANTE_USD]'
+              }}</strong>&nbsp;,
+            se cancelará contra presentación de facturas
+            &nbsp;<strong>{{ contratoData.anexo1ConAnticipoPeriodoFacturas || '[PERÍODO_FACTURAS]' }}</strong>&nbsp;.
+            De cada planilla se descontará la amortización del anticipo y cualquier otra obligación a cargo del
+            CONTRATISTA.
+          </p>
+
+          <p class="contract-paragraph">
+            Los pagos que se realicen al CONTRATISTA se harán con la presentación de la correspondiente factura,
+            previa aprobación de LA CONTRATANTE.
+          </p>
+
+          <p class="contract-paragraph">
+            No habrá lugar a alegar mora de LA CONTRATANTE, mientras no se amortice la totalidad del anticipo
+            otorgado.
+          </p>
+        </div>
+
+        <div *ngIf="contratoData.clausulaSextaFormaPagoOpcion === 'sin_anticipo_un_pago'">
+          <p class="contract-paragraph">
+            El valor del contrato se cancelará en un solo pago contra entrega de los bienes, y una vez suscrita el
+            acta de entrega recepción. Los pagos que se realicen al CONTRATISTA se harán con la presentación de la
+            correspondiente factura, previa aprobación de LA CONTRATANTE.
+          </p>
+        </div>
+
+        <div *ngIf="contratoData.clausulaSextaFormaPagoOpcion === 'sin_anticipo_varios_pagos'">
+          <p class="contract-paragraph">
+            El valor del contrato se cancelará mediante pago contra presentación de facturas
+            &nbsp;<strong>{{ contratoData.anexo1SinAnticipoVariosPagosPeriodo || '[PERÍODO_FACTURAS]' }}</strong>&nbsp;.
+            Todos los pagos que se hagan al CONTRATISTA por cuenta de este contrato se efectuarán con sujeción a
+            los precios unitarios acordados y por los bienes
+            efectivamente entregados a entera satisfacción de la contratante. Los pagos que se realicen al
+            CONTRATISTA se harán con la presentación de la correspondiente factura, previa aprobación de LA
+            CONTRATANTE.
+          </p>
+        </div>
+
+        <!-- Resto del contenido de forma de pago (sin cambios) -->
+        <p class="contract-paragraph"><strong>Pagos indebidos. -</strong> LA CONTRATANTE se reserva el derecho de
+          reclamar al CONTRATISTA, en cualquier tiempo, antes o después de la ejecución del contrato, sobre
+          cualquier pago indebido por error de cálculo o por cualquier otra
+          razón debidamente justificada, obligándose EL CONTRATISTA a satisfacer las reclamaciones que por este
+          motivo llegare a plantear LA CONTRATANTE, reconociéndose el interés legal vigente.</p>
+
+        <p class="contract-paragraph"><strong> Requisito previo al pago:</strong> Previo al pago por los bienes, el
+          contratista deberá presentar la certificación que acredite estar al día en el pago de aportes, fondos de
+          reserva y descuentos al Instituto Ecuatoriano de Seguridad Social, por los empleados y trabajadores a su
+          cargo.</p>
+
+        <p class="contract-paragraph">De los pagos que deba hacer, la contratante podrá retener el valor de las multas
+          que procedan.</p>
+
+
+
+
+        <!-- ...resto del contenido de datos bancarios sin cambios... -->
+        <p class="contract-paragraph">Los pagos se realizarán mediante transferencia bancaria según el siguiente
+          detalle:</p>
+        <p class="contract-paragraph" style="padding-left: 40px;"><strong>DATOS DEL BENEFICIARIO Y SU
+            BANCO</strong></p>
+        <p class="contract-paragraph" style="padding-left: 40px;"><strong>BANCO:</strong> &nbsp;{{
+          contratoData.beneficiarioBanco || '[BANCO]' }}&nbsp;</p>
+        <p class="contract-paragraph" style="padding-left: 40px;"><strong>NOMBRE:</strong> &nbsp;{{
+          contratoData.beneficiarioNombre || '[NOMBRE_BENEFICIARIO]' }}&nbsp;</p>
+        <p class="contract-paragraph" style="padding-left: 40px;"><strong>DIRECCIÓN:</strong> &nbsp;{{
+          contratoData.beneficiarioDireccion || '[DIRECCION_BENEFICIARIO]' }}&nbsp;</p>
+        <p class="contract-paragraph" style="padding-left: 40px;"><strong>RUC:</strong> &nbsp;{{
+          contratoData.beneficiarioRuc || '[RUC_BENEFICIARIO]' }}&nbsp;</p>
+        <p class="contract-paragraph" style="padding-left: 40px;"><strong>NRO. CUENTA:</strong> &nbsp;{{
+          contratoData.beneficiarioNumeroCuenta || '[NUMERO_CUENTA]' }}&nbsp;</p>
+        <p class="contract-paragraph" style="padding-left: 40px;"><strong>TIPO DE CUENTA:</strong> &nbsp;{{
+          contratoData.beneficiarioTipoCuenta || '[TIPO_CUENTA]' }}&nbsp;</p>
+        <p class="contract-paragraph" style="padding-left: 40px;"><strong>CORREO:</strong> &nbsp;{{
+          contratoData.beneficiarioCorreo || '[CORREO_BENEFICIARIO]' }}&nbsp;</p>
+        <p class="contract-paragraph">En el caso de que no sea posible realizar los pagos mediante transferencia,
+          podrán utilizarse otros sistemas de pago con las seguridades y registros pertinentes.</p>
+      </ng-container>
+
+
+      <!-- Cláusula Séptima: Garantías -->
+      <ng-container
+        *ngIf="contratoData.clausulaQuintaPrecioTotalLetrasNumeros && contratoData.clausulaQuintaPrecioTotalLetrasNumeros > 0">
+        <p class="contract-paragraph"><strong>Cláusula Séptima. – GARANTÍAS. -</strong>
+          &nbsp;<span *ngIf="contratoData.clausulaSeptimaGarantiasOpcion === 'opcion1_1'" style="font-weight: normal;">
+            Se aplicará la Opción 1.1 (Bienes &lt;50k, Sin Anticipo).
+          </span>&nbsp;
+          &nbsp;<span *ngIf="contratoData.clausulaSeptimaGarantiasOpcion === 'opcion1_2'" style="font-weight: normal;">
+            Se aplicará la Opción 1.2 (Bienes &lt;50k, Con Anticipo).
+          </span>&nbsp;
+          &nbsp;<span *ngIf="contratoData.clausulaSeptimaGarantiasOpcion === 'opcion2_1'" style="font-weight: normal;">
+            Se aplicará la Opción 2.1 (Bienes &gt;=50k, Con Anticipo).
+          </span>&nbsp;
+          &nbsp;<span *ngIf="contratoData.clausulaSeptimaGarantiasOpcion === 'opcion2_2'" style="font-weight: normal;">
+            Se aplicará la Opción 2.2 (Bienes &gt;=50k, Sin Anticipo).
+          </span>&nbsp;
+        </p>
+
+        <!-- Opción 1.1: Contratos < 50k, Sin Anticipo -->
+        <div *ngIf="contratoData.clausulaSeptimaGarantiasOpcion === 'opcion1_1'">
+          <p style="margin-bottom: 1em;">
+            En este contrato se rendirán las siguientes garantías:
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>FONDO DE GARANTÍA. -</strong> Para afianzar el fiel cumplimiento del contrato, de cada pago
+            que se realice al contratista se retendrá el <strong>5%</strong> como fondo de garantía.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            Con cargo al fondo de garantía se podrán ejecutar las multas que le fueren impuestas al contratista.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>Garantía Técnica.-</strong> Como el presente contrato de obras involucra la entrega de bienes,
+            para asegurar la calidad y buen funcionamiento de los bienes, al momento de la suscripción del contrato y
+            como parte integrante del mismo, <strong>EL CONTRATISTA</strong> entrega una garantía
+            <strong>del fabricante, representante, distribuidor o vendedor autorizado</strong>, la que entrará en
+            vigencia a partir de la entrega
+            recepción de los bienes y se mantendrá vigente por el lapso de
+            &nbsp;<strong>{{ contratoData.plazoGarantiaTecnica || '(definir plazo)' }}</strong>&nbsp;,
+            pues constituye una garantía independiente y subsistirá luego de cumplida la obligación principal.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            De no presentarse esta garantía <strong>EL CONTRATISTA</strong> entregará una garantía incondicional,
+            irrevocable y de cobro inmediato, o fianza instrumentada en una póliza de seguros, otorgadas, por un banco,
+            institución financiera o compañía de seguros establecidos en el Ecuador, o por intermedio de ellos,
+            por igual valor de los bienes a suministrarse.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>Devolución del fondo de garantía. -</strong> El fondo de garantía retenido se devolverá a la
+            suscripción del acta de entrega-recepción de los trabajos a entera satisfacción de la contratante.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            Entre tanto, las garantías contractuales deberán mantenerse vigentes, lo que será vigilado y exigido por
+            <strong>LA CONTRATANTE</strong>, a través de la unidad de custodia y control de las garantías.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>Ejecución de las garantías. -</strong> Las garantías contractuales podrán ser ejecutadas por
+            <strong>LA CONTRATANTE</strong> en los siguientes casos:
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>Retención definitiva del fondo de garantía:</strong>
+            El fondo de garantía será retenido definitivamente cuando la contratante declare anticipada y
+            unilateralmente terminado el contrato por causas imputables al contratista.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>La técnica:</strong> Cuando se incumpla con el objeto de esta garantía, de acuerdo con lo
+            establecido en la oferta y este contrato.
+          </p>
+        </div>
+
+        <!-- Opción 1.2: Contratos < 50k, Con Anticipo -->
+        <div *ngIf="contratoData.clausulaSeptimaGarantiasOpcion === 'opcion1_2'">
+          <p style="margin-bottom: 1em;">
+            En este contrato se rendirán las siguientes garantías:
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>FONDO DE GARANTÍA. -</strong> Para afianzar el fiel cumplimiento del contrato, de cada pago
+            que se realice al contratista se retendrá el <strong>5%</strong> como fondo de garantía.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            Con cargo al fondo de garantía se podrán ejecutar las multas que le fueren impuestas al contratista.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>De buen uso del anticipo. -</strong> <strong>EL CONTRATISTA</strong> para recibir el anticipo
+            estipulado, deberá rendir previamente garantía incondicional, irrevocable y de cobro inmediato, o fianza
+            instrumentada en una póliza de seguros, otorgadas, por un banco, institución financiera o compañía de
+            seguros establecidos en el Ecuador, o por intermedio de ellos por igual valor del anticipo, que se
+            reducirá en la proporción en que se vaya amortizando aquél o se reciban las obras.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>Garantía Técnica.-</strong> Como el presente contrato de obras involucra la entrega de bienes,
+            para asegurar la calidad y buen funcionamiento de los bienes, al momento de la suscripción del contrato y
+            como parte integrante del mismo, <strong>EL CONTRATISTA</strong> entrega una garantía
+            <strong>del fabricante, representante, distribuidor o vendedor autorizado</strong>, la que entrará en
+            vigencia a partir de la entrega
+            recepción de los bienes y se mantendrá vigente por el lapso de
+            &nbsp;<strong>{{ contratoData.plazoGarantiaTecnica || '(definir plazo)' }}</strong>&nbsp;,
+            pues constituye una garantía independiente y subsistirá luego de cumplida la obligación principal.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            De no presentarse esta garantía <strong>EL CONTRATISTA</strong> entregará una garantía incondicional,
+            irrevocable y de cobro inmediato, o fianza instrumentada en una póliza de seguros, otorgadas, por un banco,
+            institución financiera o compañía de seguros establecidos en el Ecuador, o por intermedio de ellos,
+            por igual valor de los bienes a suministrarse.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>Devolución de las garantías. -</strong> Las garantías entregadas se devolverán así:
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>Devolución del fondo de garantía. -</strong> El fondo de garantía retenido se devolverá a la
+            suscripción del acta de entrega-recepción de los trabajos a entera satisfacción de la contratante.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            La garantía de buen uso del anticipo, una vez devengado el anticipo, o entregadas por parte del
+            <strong>CONTRATISTA</strong> a entera satisfacción de <strong>LA CONTRATANTE</strong> las obras contratadas.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            Entre tanto, las garantías contractuales deberán mantenerse vigentes, lo que será vigilado y exigido por
+            <strong>LA CONTRATANTE</strong>, a través de la unidad de custodia y control de las garantías.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>Ejecución de las garantías. -</strong> Las garantías contractuales podrán ser ejecutadas por
+            <strong>LA CONTRATANTE</strong> en los siguientes casos:
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>Retención definitiva del fondo de garantía:</strong> El fondo de garantía será retenido
+            definitivamente cuando la contratante declare anticipada y unilateralmente terminado el contrato
+            por causas imputables al contratista.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>La de buen uso del anticipo:</strong>
+          </p>
+          <p style="margin-bottom: 1em; padding-left: 20px;">
+            <strong>a)</strong> Si <strong>EL CONTRATISTA</strong> no la renovare <strong>cinco (5) días</strong>
+            antes de su vencimiento.
+          </p>
+          <p style="margin-bottom: 1em; padding-left: 20px;">
+            <strong>b)</strong> En caso de que <strong>EL CONTRATISTA</strong> no devuelva el saldo del anticipo,
+            después de <strong>diez días</strong> de requerimiento por escrito por parte de <strong>LA
+              CONTRATANTE</strong>;
+          </p>
+          <p style="margin-bottom: 1em; padding-left: 20px;">
+            <strong>c)</strong> En caso de terminación unilateral del contrato y que <strong>EL CONTRATISTA</strong>
+            no pague a <strong>LA CONTRATANTE</strong> el saldo adeudado del anticipo, después de <strong>diez
+              días</strong>
+            de notificado con la liquidación del contrato.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>La técnica:</strong> Cuando se incumpla con el objeto de esta garantía, de acuerdo con lo
+            establecido en la oferta y este contrato.
+          </p>
+        </div>
+
+        <!-- Opción 2.1: Contratos >= 50k, Con Anticipo -->
+        <div *ngIf="contratoData.clausulaSeptimaGarantiasOpcion === 'opcion2_1'">
+          <p style="margin-bottom: 1em;">
+            En este contrato se rendirán las siguientes garantías:
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>De fiel cumplimiento del contrato. -</strong> Para seguridad del cumplimiento del contrato
+            <strong>EL CONTRATISTA</strong> al momento de la firma del contrato, rendirá garantía incondicional,
+            irrevocable y de cobro inmediato, o fianza instrumentada en una póliza de seguros, otorgadas, por un banco,
+            institución financiera o compañía de seguros establecidos en el Ecuador, o por intermedio de ellos,
+            según el caso, por un monto equivalente al <strong>cinco por ciento (5%)</strong> del valor de aquél.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            Con cargo a la garantía de fiel cumplimiento se podrán ejecutar las multas que le fueren
+            impuestas al <strong>CONTRATISTA</strong>.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>De buen uso del anticipo. -</strong> <strong>EL CONTRATISTA</strong> para recibir el anticipo
+            estipulado, deberá rendir previamente garantía incondicional, irrevocable y de cobro inmediato, o fianza
+            instrumentada en una póliza de seguros, otorgadas, por un banco, institución financiera o compañía de
+            seguros establecidos en el Ecuador, o por intermedio de ellos por igual valor del anticipo, que se
+            reducirá en la proporción en que se vaya amortizando aquél o se reciban las obras.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>Garantía Técnica.-</strong> Como el presente contrato de obras involucra la entrega de bienes,
+            para asegurar la calidad y buen funcionamiento de los bienes, al momento de la suscripción del contrato y
+            como parte integrante del mismo, <strong>EL CONTRATISTA</strong> entrega una garantía
+            <strong>del fabricante, representante, distribuidor o vendedor autorizado</strong>, la que entrará en
+            vigencia a partir de la entrega
+            recepción de los bienes y se mantendrá vigente por el lapso de
+            &nbsp;<strong>{{ contratoData.plazoGarantiaTecnica || '(definir plazo)' }}</strong>&nbsp;,
+            pues constituye una garantía independiente y subsistirá luego de cumplida la obligación principal.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            De no presentarse esta garantía <strong>EL CONTRATISTA</strong> entregará una garantía incondicional,
+            irrevocable y de cobro inmediato, o fianza instrumentada en una póliza de seguros, otorgadas, por un banco,
+            institución financiera o compañía de seguros establecidos en el Ecuador, o por intermedio de ellos,
+            por igual valor de los bienes a suministrarse.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>Devolución de las garantías. -</strong> Las garantías entregadas se devolverán así:
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            La garantía de fiel cumplimiento del contrato, a la suscripción del acta de entrega-recepción de las
+            obras a entera satisfacción de <strong>LA CONTRATANTE</strong>.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            La garantía de buen uso del anticipo, una vez devengado el anticipo, o entregadas por parte del
+            <strong>CONTRATISTA</strong> a entera satisfacción de <strong>LA CONTRATANTE</strong> las obras contratadas.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            Entre tanto, las garantías contractuales deberán mantenerse vigentes, lo que será vigilado y exigido por
+            <strong>LA CONTRATANTE</strong>, a través de la unidad de custodia y control de las garantías.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>Ejecución de las garantías. -</strong> Las garantías contractuales podrán ser ejecutadas por
+            <strong>LA CONTRATANTE</strong> en los siguientes casos:
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>La de fiel cumplimiento del contrato:</strong>
+          </p>
+          <p style="margin-bottom: 1em; padding-left: 20px;">
+            <strong>a)</strong> Cuando <strong>LA CONTRATANTE</strong> declare anticipada y unilateralmente
+            terminado el contrato por causas imputables al <strong>CONTRATISTA</strong>.
+          </p>
+          <p style="margin-bottom: 1em; padding-left: 20px;">
+            <strong>b)</strong> Si <strong>EL CONTRATISTA</strong> no la renovare <strong>cinco (5) días</strong>
+            antes de su vencimiento.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>La de buen uso del anticipo:</strong>
+          </p>
+          <p style="margin-bottom: 1em; padding-left: 20px;">
+            <strong>a)</strong> Si <strong>EL CONTRATISTA</strong> no la renovare <strong>cinco (5) días</strong>
+            antes de su vencimiento.
+          </p>
+          <p style="margin-bottom: 1em; padding-left: 20px;">
+            <strong>b)</strong> En caso de que <strong>EL CONTRATISTA</strong> no devuelva el saldo del anticipo,
+            después de <strong>diez días</strong> de requerimiento por escrito por parte de <strong>LA
+              CONTRATANTE</strong>;
+          </p>
+          <p style="margin-bottom: 1em; padding-left: 20px;">
+            <strong>c)</strong> En caso de terminación unilateral del contrato y que <strong>EL CONTRATISTA</strong>
+            no pague a <strong>LA CONTRATANTE</strong> el saldo adeudado del anticipo, después de <strong>diez
+              días</strong>
+            de notificado con la liquidación del contrato.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>La técnica:</strong> Cuando se incumpla con el objeto de esta garantía, de acuerdo con lo
+            establecido en la oferta y este contrato.
+          </p>
+        </div>
+
+        <!-- Opción 2.2: Contratos >= 50k, Sin Anticipo -->
+        <div *ngIf="contratoData.clausulaSeptimaGarantiasOpcion === 'opcion2_2'">
+          <p style="margin-bottom: 1em;">
+            En este contrato se rendirán las siguientes garantías:
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>De fiel cumplimiento del contrato. -</strong> Para seguridad del cumplimiento del contrato
+            <strong>EL CONTRATISTA</strong> al momento de la firma del contrato, rendirá garantía incondicional,
+            irrevocable y de cobro inmediato, o fianza instrumentada en una póliza de seguros, otorgadas, por un banco,
+            institución financiera o compañía de seguros establecidos en el Ecuador, o por intermedio de ellos,
+            según el caso, por un monto equivalente al <strong>cinco por ciento (5%)</strong> del valor de aquél.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            Con cargo a la garantía de fiel cumplimiento se podrán ejecutar las multas que le fueren
+            impuestas al <strong>CONTRATISTA</strong>.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>Garantía Técnica.-</strong> Como el presente contrato de obras involucra la entrega de bienes,
+            para asegurar la calidad y buen funcionamiento de los bienes, al momento de la suscripción del contrato y
+            como parte integrante del mismo, <strong>EL CONTRATISTA</strong> entrega una garantía
+            <strong>del fabricante, representante, distribuidor o vendedor autorizado</strong>, la que entrará en
+            vigencia a partir de la entrega
+            recepción de los bienes y se mantendrá vigente por el lapso de
+            &nbsp;<strong>{{ contratoData.plazoGarantiaTecnica || '(definir plazo)' }}</strong>&nbsp;,
+            pues constituye una garantía independiente y subsistirá luego de cumplida la obligación principal.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            De no presentarse esta garantía <strong>EL CONTRATISTA</strong> entregará una garantía incondicional,
+            irrevocable y de cobro inmediato, o fianza instrumentada en una póliza de seguros, otorgadas, por un banco,
+            institución financiera o compañía de seguros establecidos en el Ecuador, o por intermedio de ellos,
+            por igual valor de los bienes a suministrarse.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>Devolución de las garantías. -</strong> Las garantías entregadas se devolverán así:
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            La garantía de fiel cumplimiento del contrato, a la suscripción del acta de entrega-recepción de las
+            obras a entera satisfacción de <strong>LA CONTRATANTE</strong>.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>Ejecución de las garantías. -</strong> Las garantías contractuales podrán ser ejecutadas por
+            <strong>LA CONTRATANTE</strong> en los siguientes casos:
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>La de fiel cumplimiento del contrato:</strong>
+          </p>
+          <p style="margin-bottom: 1em; padding-left: 20px;">
+            <strong>a)</strong> Cuando <strong>LA CONTRATANTE</strong> declare anticipada y unilateralmente
+            terminado el contrato por causas imputables al <strong>CONTRATISTA</strong>.
+          </p>
+          <p style="margin-bottom: 1em; padding-left: 20px;">
+            <strong>b)</strong> Si <strong>EL CONTRATISTA</strong> no la renovare <strong>cinco (5) días</strong>
+            antes de su vencimiento.
+          </p>
+
+          <p style="margin-bottom: 1em;">
+            <strong>La técnica:</strong> Cuando se incumpla con el objeto de esta garantía, de acuerdo con lo
+            establecido en la oferta y este contrato.
+          </p>
+        </div>
+      </ng-container> <!-- End Cláusula Séptima conditional -->
+
+
+      <!-- Cláusula Octava -->
+      <p class="contract-paragraph">
+        <strong>Cláusula Octava. -PLAZO. -</strong> El plazo para la entrega de la totalidad de los bienes
+        &nbsp;<strong>{{ contratoData.clausulaOctavaEstadoBienes || '[ESTADO_BIENES]' }}</strong>&nbsp;,
+        así como la capacitación de ser el caso
+        a entera satisfacción de la contratante es de
+        &nbsp;<strong>{{ contratoData.clausulaOctavaPeriodoTexto || '[PERIODO_PLAZO_EN_LETRAS]' }}</strong>&nbsp;,
+        contado a partir de &nbsp;<strong>{{ contratoData.clausulaOctavaInicioPlazo || '[INICIO_PLAZO]'
+          }}</strong>&nbsp;.
+      </p>
+      <p class="contract-paragraph"><strong>Cláusula Novena. - PRÓRROGAS DE PLAZO. -</strong> La contratante
+        prorrogará el plazo
+        total o los plazos parciales en los
+        siguientes casos, y siempre que el contratista así lo solicitare por escrito, justificando los fundamentos
+        de la
+        solicitud, dentro del plazo de <strong>5 (cinco) días</strong> siguientes a la fecha de producido el hecho
+        que motiva la
+        solicitud:</p>
+      <p class="contract-paragraph"><strong>a)</strong> Por fuerza mayor o caso fortuito aceptado como tal por la
+        contratante. Tan
+        pronto desaparezca la causa de
+        fuerza mayor o caso fortuito, el contratista está obligado a continuar con la ejecución del contrato, sin
+        necesidad de que medie notificación por parte de la contratante para reanudarlo.</p>
+      <p class="contract-paragraph"><strong>b)</strong> Cuando la contratante ordenare aumentos de los bienes o
+        cambios.</p>
+      <p class="contract-paragraph">En caso de prórroga de plazo las partes elaborarán un nuevo cronograma de la
+        ejecución de las obligaciones
+        contractuales que suscrito por ellas, sustituirá al original o precedente y tendrá el mismo valor
+        contractual
+        del sustituido.</p>
+      <!-- Cláusula Décima -->
+      <p class="contract-paragraph"><strong>Cláusula Décima. – MULTAS. -</strong> Por cada día de retraso en la
+        ejecución de las obligaciones contractuales o por
+        cualquier incumplimiento de las obligaciones que adquiera el CONTRATISTA, se aplicará la multa diaria de
+        &nbsp;<strong>{{ contratoData.clausulaDecimaPorcentajeMulta || '[PORCENTAJE_MULTA]' }}</strong>&nbsp;, del valor
+        del
+        contrato.
+      </p>
+      <p class="contract-paragraph"><strong>Cláusula Undécima. - OTRAS OBLIGACIONES DEL CONTRATISTA. -</strong>&nbsp;El
+        contratista se
+        obliga a ejecutar el contrato,
+        sobre la base de las especificaciones técnicas; y en tal virtud, no podrá aducir error, falencias o
+        cualquier
+        inconformidad con ellos.</p>
+      <p class="contract-paragraph">El contratista se compromete durante la ejecución del contrato, a facilitar a
+        las personas designadas por la
+        contratante, toda la información y documentación que éstas soliciten para disponer de un pleno
+        conocimiento
+        técnico relacionado con la ejecución del contrato, así como de los eventuales problemas técnicos que
+        puedan
+        plantearse con relación a los bienes, y de las tecnologías, métodos y herramientas utilizadas para
+        resolverlos.
+      </p>
+      <p class="contract-paragraph">Los delegados o responsables técnicos de la contratante deberán tener el
+        conocimiento suficiente de la ejecución
+        del contrato, así como la eventual realización de ulteriores desarrollos. Para el efecto, el contratista
+        se
+        compromete durante el tiempo de ejecución contractual, a facilitar a las personas designadas por la
+        entidad
+        contratante toda la información y documentación que le sea requerida, relacionada y/o atinente al
+        desarrollo y
+        ejecución del contrato.</p>
+      <p class="contract-paragraph">Queda expresamente establecido que constituye obligación del contratista
+        ejecutar el contrato conforme a las
+        especificaciones técnicas establecidas.</p>
+      <p class="contract-paragraph">El contratista está obligado a cumplir con cualquiera otra que se derive
+        natural y legalmente del objeto del
+        contrato y sea exigible por constar en cualquier documento de éste o en norma legal específicamente
+        aplicable.
+      </p>
+      <p class="contract-paragraph">El contratista se obliga al cumplimiento de las disposiciones establecidas en
+        el Código del Trabajo y en la Ley
+        del Seguro Social Obligatorio, adquiriendo, respecto de sus trabajadores, la calidad de patrono, sin que
+        la
+        contratante tenga responsabilidad alguna por tales cargas, ni relación con el personal que labore en la
+        ejecución del contrato. En consecuencia la contratante está exenta de toda obligación respecto del
+        personal del
+        contratista.</p>
+      <p class="contract-paragraph">El contratista se obliga al cumplimiento de lo previsto en su oferta y a lo
+        establecido en la legislación
+        ambiental, de seguridad industrial y salud ocupacional, seguridad social, laboral, etc.</p>
+      <p class="contract-paragraph"><strong>EL CONTRATISTA</strong> se obliga a dar cumplimiento a lo establecido
+        en el <strong>Instructivo para la compra de productos y/o
+          servicios en los proyectos vigente: Normas INEN (ISO 9001: 2015, ISO 45001:2018, ISO 14001:2018, ISO
+          37001:2016)</strong>; y observar el código de ética de ambas partes, así como los procedimientos y otras
+        normativas
+        aplicables, por tanto, la relación contractual se regirá por una conducta ética entre ambas.</p>
+      <p class="contract-paragraph"><strong>EL CONTRATISTA</strong> se compromete a cumplir de forma estricta,
+        fiel, y oportuna,
+        todas y cada una de las disposiciones
+        de Seguridad Industrial, Reglamento de Seguridad y Salud, Procedimiento de Seguridad, Salud en el Trabajo
+        y
+        Medio Ambiente para contratistas, y cualquier norma, política o indicación por parte de <strong>HIDALGO E
+          HIDALGO S.A.</strong>
+        relacionada con seguridad y riesgos. <strong>EL CONTRATISTA</strong> será el único responsable de daños y
+        accidentes que le
+        pudieren afectar.</p>
+      <p class="contract-paragraph"><strong>Cláusula Duodécima. - OBLIGACIONES DE LA CONTRATANTE. -</strong>&nbsp; Son
+        obligaciones de la
+        contratante, principalmente pagar
+        el precio estipulado, y entregar al contratista las facilidades del caso, para la ejecución del contrato.
+      </p>
+      <p class="contract-paragraph"><strong>Cláusula Décima Tercera. - CONFIDENCIALIDAD Y NO DIVULGACIÓN DE
+          PROCESOS e INFORMACIÓN DE LA COMPAÑÍA. –</strong></p>
+      <p class="contract-paragraph"><strong>HIDALGO E HIDALGO S.A.</strong>&nbsp; es propietaria de tecnología valiosa y
+        secretos
+        empresariales relacionados con su objeto
+        social, afines con su actividad en el campo de la construcción principalmente y otros como procesos
+        agrícolas y
+        comerciales e industriales, que pueden denominarse como <strong>"TECNOLOGÍA O PROPIEDAD
+          INDUSTRIAL”</strong>&nbsp; que incluye además
+        todo lo previsto y comprendido como <strong>"secreto industrial”</strong> o bien <strong>“secreto
+          empresarial"</strong> por la anterior Decisión
+        N.º 344 y la actual 486 de la Comisión del Acuerdo de Cartagena, especialmente en el Capítulo II "De los
+        Secretos Empresariales", y comprende todo lo relacionado con información, prácticas, procesamientos y
+        procesos
+        registrados o no.</p>
+      <p class="contract-paragraph">El contratista debido a las características de su trabajo tiene o puede tener
+        acceso a la indicada <strong>"Tecnología"</strong>,
+        <strong>"Propiedad Industrial"</strong> o <strong>“secretos empresariales”</strong>, o a partes de ellos.
+      </p>
+      <p class="contract-paragraph">Se considerará como secreto empresarial cualquier información no divulgada a
+        terceros fuera de la empresa que
+        <strong>HIDALGO E HIDALGO S.A.</strong> o sus relacionadas legítimamente posea, que pueda usarse en alguna
+        actividad
+        constructiva, productiva, industrial o comercial, y que sea susceptible de transmitirse a un tercero.
+      </p>
+      <p class="contract-paragraph">Con el propósito de dar adecuado cumplimiento a las disposiciones legales
+        aplicables a la materia, y evitar
+        daños, ya a la <strong>CONTRATANTE</strong>, ya al contratista, y protegerse de una eventual competencia
+        desleal, el contratista,
+        (<strong>empleados, asesores, empresas subsidiarias, afiliadas, y colabores de esa empresa</strong>) se
+        compromete debidamente
+        advertido y conociendo la necesidad de protección y adecuado manejo de la información, tecnología,
+        conocimiento
+        y secretos empresariales de la <strong>CONTRATANTE</strong>, a:</p>
+      <p class="contract-paragraph">1. Mantener bajo condiciones de absoluta y estricta confidencialidad toda la
+        información escrita, oral, o
+        electrónica, no pública, registrada o no, que haya recibido desde el inicio de su vinculación con la
+        <strong>CONTRATANTE</strong>, reciba o intercambie o conozca debido a/o como resultado de su trabajo,
+        servicios, o actividades
+        que realiza en virtud de este contrato. Sea que las conozca o llegue a conocer indirecta o directamente,
+        por
+        reuniones o charlas presenciales, telefónicas, videoconferencias, o por cualquier otro medio o soporte
+        tecnológico; por ideas comunicadas, conceptos, know-how, técnicas, diseños, estrategias, pliegos de
+        contratación, especificaciones, planos, cuadros, datos, memorias de cálculo, programas de computación,
+        planes de
+        marketing, o cualquier actividad a desarrollar en cumplimiento de su relación contractual con la compañía
+        <strong>Hidalgo e Hidalgo S.A.</strong>
+      </p>
+      <p class="contract-paragraph">Conforme al <strong>artículo 115 del CÓDIGO ORGÁNICO DE LA ECONOMÍA SOCIAL DE
+          LOS CONOCIMIENTOS</strong>&nbsp;, la titularidad de todos
+        los diseños, diagramas, procesos y procedimientos constructivos y en general de toda mejora, desarrollo,
+        novedad, manual, sistema u obra creada bajo relación contractual o por encargo de la
+        <strong>CONTRATANTE</strong>, corresponderá
+        a <strong>Hidalgo e Hidalgo S.A.</strong> Queda establecido que toda obra o creación, invención o
+        desarrollo se considerará de
+        titularidad de la <strong>CONTRATANTE</strong> y la obra creada como bajo la contratación y/o por encargo.
+      </p>
+      <p class="contract-paragraph">La inobservancia y/o vulneración de la presente obligación será causa
+        suficiente para la terminación unilateral
+        de la relación contractual y será justa causa para que <strong>HIDALGO E HIDALGO S.A.</strong>&nbsp;, ejerza las
+        acciones legales
+        correspondientes, en calidad de <strong>CONTRATANTE</strong> propietario de la información, tecnología o
+        secreto empresarial, y,
+        pueda reclamar las indemnizaciones y reparaciones a que haya lugar.</p>
+      <p class="contract-paragraph">2. Dentro de la información confidencial se incluyen las técnicas, procesos,
+        metodologías, estrategias y similares
+        desarrolladas durante las labores y trabajos específicos y generales desempeñados por el contratista de
+        <strong>Hidalgo
+          e Hidalgo S.A.</strong> en la actividad objeto de este contrato y/o cualquier actividad dentro de la
+        empresa; por lo que,
+        en estricta observancia de la obligación de confidencialidad, no podrá hacer uso de esa información
+        confidencial,
+        registrada o no, luego de concluida su relación contractual con la <strong>CONTRATANTE</strong>, sin
+        autorización y
+        conocimiento de ésta.
+      </p>
+      <p class="contract-paragraph">La experiencia general y/o específica así adquirida por el contratista durante
+        su relación con <strong>Hidalgo e Hidalgo
+          S.A.</strong> solo podrá ser utilizada en beneficio propio o de terceros, previa autorización y
+        valoración económica
+        entre el contratista y la compañía <strong>Hidalgo e Hidalgo S.A.</strong>; y para incluir tal experiencia
+        en ofertas y
+        compromisos precontractuales y contractuales públicos y/o privados, se requerirá igual autorización y
+        valoración.
+        Para incluir tal experiencia o información confidencial en promociones, hojas de vida o similares,
+        el contratista se obliga a solicitar la autorización escrita de <strong>Hidalgo e Hidalgo S.A.</strong> y
+        a indemnizar a la
+        compañía en caso de no hacerlo.</p>
+      <p class="contract-paragraph">3. El contratista se compromete a abstenerse de revelar aspecto alguno del
+        contenido de la información confidencial,
+        conocimiento y secretos empresariales conforme a lo estipulado en esta cláusula, a menos que se obtenga el
+        consentimiento escrito de la compañía <strong>HIDALGO E HIDALGO S.A.</strong></p>
+      <p class="contract-paragraph">4. La presente declaración y compromiso de guardar confidencialidad y/o reserva
+        es de carácter permanente por lo que
+        se mantendrá durante el tiempo que dure la relación contractual, y se extenderá indefinidamente una vez
+        finalizada ésta.</p>
+      <p class="contract-paragraph">5. El contratista respecto de la <strong>CONTRATANTE</strong>, para todo efecto
+        será considerado
+        como confidente, y la <strong>CONTRATANTE</strong>
+        permitirá que éste acceda al conocimiento de su <strong>"Tecnología, procesos, conocimiento, técnica y
+          secretos
+          empresariales”</strong> solo bajo la condición de que el contratista no revele esa información, secretos
+        e
+        investigaciones y no la use en su propio beneficio o el de terceros, por sí o por interpuesta persona en
+        cualquier
+        tiempo y lugar, sin el consentimiento expreso y por escrito de <strong>Hidalgo e Hidalgo S.A.</strong></p>
+      <p class="contract-paragraph"><strong>CONFIDENCIALIDAD, TRATAMIENTO ADECUADO Y PROTECCIÓN DE DATOS
+          PERSONALES. –</strong></p>
+      <p class="contract-paragraph">En caso de que, en el marco de la ejecución del presente contrato, el
+        contratista acceda, obtenga o trate de
+        cualquier modo datos personales de los que la <strong>CONTRATANTE</strong> es responsable, se compromete a
+        tratar y conservar
+        dichos datos, de conformidad con la <strong>Política de Protección de Datos de la CONTRATANTE</strong>, la
+        <strong>Ley Orgánica de
+          Protección de Datos Personales</strong>, el <strong>Reglamento General a la Ley Orgánica de Protección
+          de Datos Personales</strong> y
+        demás normativa conexa.
+      </p>
+      <p class="contract-paragraph">En particular, el contratista se compromete a tratar dichos datos
+        exclusivamente para las finalidades
+        establecidas en este contrato y de conformidad con las instrucciones impartidas por la
+        <strong>CONTRATANTE</strong>. Asimismo, se
+        compromete a conservar y tratar los datos, empleando medidas de seguridad de la información adecuadas
+        según el
+        estado del arte y el tipo de industria, y a garantizar la protección de datos personales desde el diseño y
+        por
+        defecto, limitándose estrictamente a los tratamientos relacionados con los fines de la contratación.
+      </p>
+      <p class="contract-paragraph">El contratista deberá notificar a la <strong>CONTRATANTE</strong> de forma
+        inmediata en caso de
+        que conozca una vulneración a la
+        seguridad de la información que comprometa los datos personales de la <strong>CONTRATANTE</strong>.</p>
+      <p class="contract-paragraph">De igual forma, en caso de que un titular de datos personales solicite ejercer
+        los derechos contemplados en la
+        <strong>Ley Orgánica de Protección de Datos Personales</strong>, con relación a datos personales de los
+        que la <strong>CONTRATANTE</strong> es
+        responsable, el contratista deberá notificar a la <strong>CONTRATANTE</strong> de manera inmediata, y
+        deberá colaborar
+        activamente en la atención y respuesta a la solicitud, dentro de los términos establecidos en la
+        <strong>Ley Orgánica de
+          Protección de Datos Personales</strong>.
+      </p>
+      <p class="contract-paragraph">El contratista reconoce expresamente su obligación de eliminar o devolver la
+        información que contenga datos
+        personales de los que la <strong>CONTRATANTE</strong> sea responsable, una vez terminada la relación
+        comercial, o cuando la
+        <strong>CONTRATANTE</strong> lo solicite de forma expresa, siempre que no exista obligación legal de
+        conservarla.
+      </p>
+      <p class="contract-paragraph">El contratista no podrá realizar copias de seguridad no autorizadas ni
+        transferir la información que contenga
+        datos personales, salvo que la <strong>CONTRATANTE</strong> hubiera dado su autorización previa por
+        escrito; o exista orden de
+        una autoridad judicial o administrativa competente, sin perjuicio de la obligación del contratista de
+        notificar
+        dicha circunstancia a la <strong>CONTRATANTE</strong> en un plazo máximo de <strong>2 días</strong> desde
+        su conocimiento.</p>
+      <p class="contract-paragraph">El contratista libera a la <strong>CONTRATANTE</strong>, de cualquier
+        responsabilidad derivada
+        de una indebida obtención y
+        tratamiento de datos personales, que no cuente con autorización por escrito por parte de la
+        <strong>CONTRATANTE</strong>, lo que
+        incluye las multas impuestas por la autoridad de control, y se obliga a indemnizarla en caso de ser
+        sancionada,
+        siempre que se compruebe el mal tratamiento por parte del contratista. Esto implica expresamente la
+        posibilidad
+        de repetir el valor de la o las sanciones impuestas a la <strong>CONTRATANTE</strong> por incumplimiento o
+        negligencia del
+        contratista en relación con un mal tratamiento de datos personales, según disponga la <strong>Autoridad de
+          Protección de
+          Datos</strong>.
+      </p>
+      <p class="contract-paragraph">En caso de que se determine que el contratista tiene la calidad de encargado
+        del tratamiento de datos personales
+        en nombre de la <strong>CONTRATANTE</strong>, las partes suscribirán un contrato de encargo, independiente
+        del contrato
+        principal, en el que se establecerán las instrucciones concretas del Responsable al Encargado para el
+        tratamiento
+        de Datos. Para efecto de la suscripción del contrato de Encargo, la <strong>CONTRATANTE</strong> se
+        reserva el
+        derecho de verificar que el contratista cuente con medidas técnicas, jurídicas y organizacionales
+        suficientes
+        para garantizar un nivel adecuado de protección de datos personales. En caso de que la
+        <strong>CONTRATANTE</strong> determine que
+        el contratista no está en la capacidad de garantizar un nivel adecuado de protección de datos personales,
+        y el
+        tratamiento sea indispensable para la ejecución del contrato principal, la <strong>CONTRATANTE</strong>
+        podrá dar por terminado
+        el contrato principal, sin que dicha terminación le obligue al pago de indemnización alguna.
+      </p>
+      <p class="contract-paragraph">El contratista declara que conoce la <strong>Política de Protección y
+          Tratamiento de Datos Personales</strong> que consta en la
+        siguiente dirección: <strong>“http://www.heh.com.ec.”</strong></p>
+      <p class="contract-paragraph"><strong>Cláusula Décima Cuarta. - CONTRATOS COMPLEMENTARIOS. -</strong> Por
+        causas
+        justificadas, las partes podrán firmar
+        contratos complementarios.</p>
+      <p class="contract-paragraph"><strong>Cláusula Décima Quinta. – NATURALEZA. -</strong> El presente Contrato
+        es de naturaleza
+        civil, por consiguiente, serán
+        aplicables las normas del Código Civil y demás normativa pertinente. <strong>EL CONTRATISTA</strong>
+        declara conocer la normativa
+        Laboral Ecuatoriana contenida tanto en el Código del Trabajo vigente como en sus respectivos Reglamentos,
+        leyes
+        especiales y demás normas relacionadas con el ámbito laboral y de seguridad social.</p>
+      <p class="contract-paragraph">Por lo tanto, <strong>LA CONTRATANTE</strong> no tendrá ninguna obligación
+        laboral ni de
+        seguridad social con <strong>EL CONTRATISTA</strong>, por
+        lo que no están ni se entienden incorporadas al presente Contrato las disposiciones del Código del Trabajo
+        ni
+        las demás relativas a este tipo de relaciones. Por tanto, las Partes contratantes no podrán invocar las
+        disposiciones contenidas en las Leyes laborales y prestacionales en cualquier disputa, interpretación, o
+        reclamo
+        que tuvieren. La presente relación queda especial y expresamente excluida de cualquier liquidación,
+        indemnización o remuneración que pudiere causarse por la aplicación de cualquier ley laboral o relacionada
+        con
+        el régimen laboral y de seguridad social a la finalización del presente Contrato.</p>
+      <p class="contract-paragraph">De igual forma <strong>EL CONTRATISTA</strong> se compromete a cumplir a
+        cabalidad con los
+        compromisos contractuales que adquiera
+        frente a terceros para la prestación del presente Contrato.</p>
+      <p class="contract-paragraph"><strong>Cláusula Décima Sexta. - TERMINACIÓN DEL CONTRATO. -</strong> El
+        presente contrato
+        termina:</p>
+      <p class="contract-paragraph">1. Por cumplimiento de las obligaciones contractuales;</p>
+      <p class="contract-paragraph">2. Por mutuo acuerdo de las partes;</p>
+      <p class="contract-paragraph">3. Por sentencia o laudo ejecutoriados que declare la nulidad del contrato o su
+        resolución;</p>
+      <p class="contract-paragraph">4. Por declaración unilateral de la contratante, en caso de incumplimiento del
+        contratista;</p>
+      <p class="contract-paragraph">5. En caso de persona natural por muerte del contratista; en caso de persona
+        jurídica por disolución de la persona
+        jurídica contratista que no se origine en decisión interna voluntaria de los órganos competentes de tal
+        persona
+        jurídica; y,</p>
+      <p class="contract-paragraph">6. Por vulnerar el contratista el compromiso de confidencialidad, tratamiento
+        adecuado y protección de datos
+        personales que asume al celebrar este contrato, o por haber cedido su obligación contractual</p>
+      <p class="contract-paragraph">
+        <strong>Terminación por causas imputables a la contratante. –</strong> El contratista podrá
+        demandar la resolución del contrato por incumplimiento culposo por parte de la contratante de sus obligaciones
+        contractuales por más de
+        <strong>{{ contratoData.diasIncumplimientoContratante || '[DÍAS_INCUMPLIMIENTO_CONTRATANTE]' }} días</strong>,
+        sin que medie fuerza mayor o caso fortuito.
+      </p>
+      <p class="contract-paragraph"><strong>Cláusula Décima Séptima. - Terminación por mutuo acuerdo.-</strong>
+        Cuando por
+        circunstancias imprevistas, técnicas o
+        económicas, o causas de fuerza mayor o caso fortuito, no fuere posible o conveniente para los intereses de
+        las
+        partes, ejecutar total o parcialmente el contrato, podrán, por mutuo acuerdo convenir en la extinción de
+        todas o
+        algunas de las obligaciones contractuales, en el estado en que se encuentren.
+        La terminación por mutuo acuerdo no implicará renuncia a derechos causados o adquiridos en favor de la
+        Contratante o del contratista.</p>
+      <p class="contract-paragraph"><strong>Cláusula Décima Octava. - Terminación unilateral del contrato.
+          -</strong> La
+        Contratante podrá declarar terminado
+        anticipada y unilateralmente el presente contrato:</p>
+      <p class="contract-paragraph"><strong>1.</strong> Por incumplimiento del contratista;
+        <br><strong>2.</strong> En caso de persona jurídica por quiebra; en caso de persona natural por insolvencia
+        del contratista;
+        <br><strong>3.</strong> Si el valor de las multas supera el <strong>5%</strong> del valor del contrato;
+        <br> <strong>4.</strong> Por suspensión del contrato, por decisión del contratista, por más de
+        <strong>{{ contratoData.diasSuspensionContratista || '[DÍAS_SUSPENSIÓN_CONTRATISTA]' }} días</strong>, sin que
+        medie fuerza mayor o
+        caso fortuito;
+        <br><strong>5.</strong> Por haber cedido el contratista su obligación contractual;
+        <br><strong>6.</strong> Por vulnerar el vendedor el compromiso de confidencialidad, tratamiento adecuado y
+        protección de datos
+        personales estipulado en este contrato.
+        <br><strong>7.</strong> En el caso de haberse rendido garantías, por no renovarlas
+        con al menos
+        <strong>cinco días</strong> anteriores a su vencimiento.
+      </p>
+
+
+      <p class="contract-paragraph"><strong>Cláusula Décima Novena. - RECEPCIÓN. -</strong>&nbsp; La recepción de los
+        bienes objeto de la
+        contratación se realizará a entera
+        satisfacción de la contratante, la que podrá presentar reclamos al contratista por bienes defectuosos, los
+        que
+        deberán ser atendidos por éste, a su costa.</p>
+      <p class="contract-paragraph"><strong>Cláusula Vigésima - ACTA DE RECEPCIÓN. -</strong>&nbsp; La constancia de
+        entrega-recepción de
+        los bienes constará en acta
+        suscrita por las partes, en la que se dejará constancia de los antecedentes, recepción de los bienes a
+        entera
+        satisfacción, y liquidación económica.</p>
+      <p class="contract-paragraph">Al efecto, las partes integrarán una comisión de recepción con los delegados
+        que designen, quienes dejarán
+        expresa constancia del cabal cumplimiento del objeto contractual, a entera satisfacción de la contratante.
+      </p>
+      <p class="contract-paragraph">Los integrantes de la comisión serán civil y penalmente responsables por sus
+        aseveraciones. Hará parte del acta
+        de entrega-recepción, la liquidación económica del contrato.</p>
+      <p class="contract-paragraph"><strong>Cláusula Vigésima Primera. - TRIBUTOS, RETENCIONES Y GASTOS.
+          -</strong>&nbsp; La contratante
+        efectuará al contratista las
+        retenciones que dispongan las leyes tributarias, actuará como agente de retención del Impuesto a la Renta
+        e
+        Impuesto al Valor Agregado, al efecto procederá conforme la legislación tributaria vigente.</p>
+      <p class="contract-paragraph">La contratante retendrá el valor de los descuentos que el Instituto
+        Ecuatoriano de Seguridad Social ordenare y
+        que corresponda a mora patronal, por obligaciones con el seguro social provenientes de servicios
+        personales para
+        la ejecución del contrato de acuerdo con la Ley de Seguridad Social.</p>
+      <p class="contract-paragraph"><strong>Cláusula Vigésima Segunda. - SOLUCIÓN DE CONTROVERSIAS. -</strong>&nbsp;
+        Toda controversia
+        que derive de la interpretación o
+        cumplimiento de este contrato, las partes acuerdan someterla a arbitraje, en el <strong>Centro de
+          Arbitraje y Mediación
+          de la Cámara de Comercio de Quito</strong>, que se sujetará a lo dispuesto en la Ley de Arbitraje y
+        Mediación, y
+        al Reglamento
+        que regule el funcionamiento de dicho centro de arbitraje y a las siguientes normas:</p>
+      <p class="contract-paragraph">El arbitraje será en derecho;</p>
+      <p class="contract-paragraph">Los árbitros serán seleccionados de acuerdo con lo establecido en el
+        Reglamento del Centro de Arbitraje de la
+        Cámara de Comercio de Quito y podrán pedir la ejecución de medidas cautelares, solicitando el auxilio de
+        funcionarios públicos, judiciales, policiales y administrativos sin que sea necesario recurrir a juez
+        ordinario
+        alguno para tales efectos.</p>
+      <p class="contract-paragraph">El arbitraje será confidencial.</p>
+      <p class="contract-paragraph">Las partes renuncian a la jurisdicción ordinaria, y se obligan a acatar el
+        laudo que expida el Tribunal Arbitral.
+      </p>
+      <p class="contract-paragraph">El lugar del arbitraje será las instalaciones de la Cámara de Comercio de
+        Quito.</p>
+      <p class="contract-paragraph">La legislación aplicable a este contrato es la ecuatoriana.</p>
+      <p class="contract-paragraph"><strong>DE LA NULIDAD. -</strong> Si cualquiera de las estipulaciones de este
+        Contrato fuere
+        declarada nula, ilegal, inválida o
+        inejecutable por una autoridad judicial o arbitral competente, las demás disposiciones permanecerán con
+        pleno
+        vigor y eficacia.</p>
+      <p class="contract-paragraph"><strong>Cláusula Vigésima Tercera. - COMUNICACIONES ENTRE LAS PARTES.&nbsp;
+          –</strong> Para todos los
+        efectos de este contrato, las
+        partes convienen en señalar su domicilio en la ciudad de Quito.</p>
+      <p class="contract-paragraph">Todas las comunicaciones, sin excepción, entre las partes, relativas a este
+        contrato, serán formuladas por
+        escrito o por medios electrónicos y en idioma español, a las siguientes direcciones:</p>
+      <p class="contract-paragraph"><strong>DE LA CONTRATANTE:</strong> Provincia PICHINCHA, Cantón QUITO,
+        Parroquia LA CONCEPCION,
+        Ciudadela KENNEDY, Calle Av. Galo
+        Plaza Lasso, Número: N51-127 Intersección: Algarrobos, Teléfono: 3822720, correo electrónico
+        &nbsp;<strong>{{ contratoData.contratanteCorreoComunicaciones || '[CORREO_CONTRATANTE]' }}</strong>&nbsp;
+      </p>
+      <p class="contract-paragraph"><strong>DEL CONTRATISTA:</strong> Provincia
+        &nbsp;<strong>{{ contratoData.contratistaProvinciaComunicaciones || '[PROVINCIA]' }}</strong>&nbsp;, Cantón
+        &nbsp;<strong>{{ contratoData.contratistaCantonComunicaciones || '[CANTON]' }}</strong>&nbsp;,
+        Parroquia &nbsp;<strong>{{ contratoData.contratistaParroquiaComunicaciones || '[PARROQUIA]' }}</strong>&nbsp;,
+        Dirección &nbsp;<strong>{{ contratoData.contratistaDireccionComunicaciones || '[DIRECCION]' }}</strong>&nbsp;,
+        Número &nbsp;<strong>{{ contratoData.contratistaNumeroComunicaciones || '[NUMERO]' }}</strong>&nbsp;,
+        Teléfonos: &nbsp;<strong>{{ contratoData.contratistaTelefonosComunicaciones || '[TELEFONOS]' }}</strong>&nbsp;,
+        Correo
+        electrónico &nbsp;<strong>{{ contratoData.contratistaCorreoComunicaciones || '[CORREO_CONTRATISTA]'
+          }}</strong>&nbsp;
+      </p>
+      <p class="contract-paragraph"><strong>Cláusula Vigésima Cuarta. - ACEPTACIÓN DE LAS PARTES. -</strong>&nbsp; Las
+        partes manifiestan
+        que conocen y aceptan el texto
+        íntegro del presente documento; por lo que, libre y voluntariamente declaran su aceptación a todo lo
+        convenido
+        en el presente contrato y se someten a sus estipulaciones.</p>
+      <p class="contract-paragraph">Dado, en la ciudad de San Francisco de Quito, a los
+        &nbsp;<strong>{{ contratoData.fechaFirmaContratoDia || '[DIA]' }}</strong>&nbsp; días del mes de
+        &nbsp;<strong>{{ contratoData.fechaFirmaContratoMes || '[MES]' }}</strong>&nbsp; de
+        &nbsp;<strong>{{ contratoData.fechaFirmaContratoAnio || '[AÑO]' }}</strong>&nbsp;
+      </p>
+      <p class="contract-paragraph"><strong>LA CONTRATANTE</strong></p>
+      <p class="contract-paragraph">______________________</p>
+      <p class="contract-paragraph"><strong>EL CONTRATISTA</strong></p>
+      <p class="contract-paragraph">_______________________</p>
+
+
+    </div> <!-- Fin contract-preview -->
+  </div>
 </div>
