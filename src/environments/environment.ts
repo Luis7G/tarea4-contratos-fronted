@@ -1,4 +1,5 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:5221/api'  // Para desarrollo local
+  apiUrl: 'http://localhost:8080/api',
+  baseUrl: 'http://localhost:8080'  // Agregar URL base
 };
