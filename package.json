@@ -9,7 +9,8 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "netlify:build": "npm ci && npm run build",
-    "preview": "ng build && npx http-server dist/plantilla-word-app -p 4200"
+    "preview": "ng build --configuration production && npx http-server dist/plantilla-word-app -p 4200",
+    "serve:dist": "npx http-server dist/plantilla-word-app -p 4200"
   },
   "private": true,
   "dependencies": {

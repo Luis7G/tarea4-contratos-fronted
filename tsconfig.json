@@ -1,7 +1,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "outDir": "./dist/out-tsc",
+    "outDir": "./dist/out-tsc/app",
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
@@ -16,7 +16,8 @@
     "target": "ES2022",
     "module": "ES2022",
     "typeRoots": ["node_modules/@types", "src/types"],
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+        "types": []
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
@@ -25,6 +26,12 @@
     "strictTemplates": true
   },
   "include": [
-    "src/**/*"
-  ]
+    "src/**/*.d.ts"
+  ],
+    "exclude": [
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts"
+  ],
+    "files": [
+    "src/main.ts"  ]
 }
