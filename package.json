@@ -4,9 +4,12 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "ng build --configuration production",
+    "build:dev": "ng build --configuration development",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "netlify:build": "npm ci && npm run build",
+    "preview": "ng build && npx http-server dist/plantilla-word-app -p 4200"
   },
   "private": true,
   "dependencies": {
