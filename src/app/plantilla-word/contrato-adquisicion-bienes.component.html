@@ -427,16 +427,84 @@
     </div>
   </div>
 
-  <!-- Botón para generar PDF -->
-  <div style="text-align: center; margin: 20px 0;">
-    <button (click)="checkElement()"
-      style="margin-right: 10px; background-color: orange; color: white; padding: 8px 16px; border: none; border-radius: 3px;">
-      Debug: Verificar Elemento
-    </button>
-    <button (click)="generatePDF()"
-      style="background-color: #2c5aa0; color: white; padding: 12px 30px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">
-      Generar PDF del Contrato
-    </button>
+  <!-- Botones Principales -->
+  <div class="config-box" style="background: #ffffff; padding: 20px; border-radius: 8px; border: 2px solid #2c5aa0;">
+    <h3 style="color: #2c5aa0; margin-bottom: 20px;">Acciones Disponibles</h3>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+
+      <!-- BOTÓN 1: Generar PDF -->
+      <div style="text-align: center; padding: 20px; background: #e8f4fd; border-radius: 8px;">
+        <h4 style="color: #2c5aa0; margin-bottom: 15px;">Generar PDF</h4>
+        <p style="margin-bottom: 15px; color: #666;">Genera el PDF del contrato y lo guarda en la base de datos</p>
+
+        <button (click)="generarYDescargarPdf()" [disabled]="isGeneratingPdf" style="
+          background: #2c5aa0;
+          color: white;
+          border: none;
+          padding: 12px 24px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 16px;
+          width: 100%;
+          transition: background 0.3s;
+        " [style.background]="isGeneratingPdf ? '#6c757d' : '#2c5aa0'">
+
+          <span *ngIf="!isGeneratingPdf">Generar y Descargar PDF</span>
+          <span *ngIf="isGeneratingPdf">Generando PDF...</span>
+        </button>
+      </div>
+
+      <!-- BOTÓN 2: Subir PDF -->
+      <div style="text-align: center; padding: 20px; background: #f0f8e8; border-radius: 8px;">
+        <h4 style="color: #28a745; margin-bottom: 15px;">Subir PDF Existente</h4>
+        <p style="margin-bottom: 15px; color: #666;">Sube un PDF ya generado y guarda los datos del contrato</p>
+
+        <input type="file" id="pdfFileInput" accept=".pdf" (change)="onFileSelected($event)"
+          style="margin-bottom: 15px; width: 100%;">
+
+        <button (click)="subirPdfExistente()" [disabled]="!selectedPdfFile || isUploadingPdf" style="
+          background: #28a745;
+          color: white;
+          border: none;
+          padding: 12px 24px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 16px;
+          width: 100%;
+          transition: background 0.3s;
+        " [style.background]="(!selectedPdfFile || isUploadingPdf) ? '#6c757d' : '#28a745'">
+
+          <span *ngIf="!isUploadingPdf">Subir PDF y Guardar</span>
+          <span *ngIf="isUploadingPdf">Subiendo PDF...</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Botón Limpiar -->
+    <div style="text-align: center; margin-top: 20px;">
+      <button (click)="limpiarFormulario()" style="
+        background: #ffc107;
+        color: #212529;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+      ">
+        Limpiar Formulario
+      </button>
+    </div>
+  </div>
+
+  <!-- Información del último contrato generado -->
+  <div *ngIf="lastGeneratedContrato" class="config-box"
+    style="background: #d4edda; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
+    <h4 style="color: #155724; margin-bottom: 10px;">Último Contrato Generado</h4>
+    <p><strong>ID:</strong> {{lastGeneratedContrato.id}}</p>
+    <p><strong>Contratista:</strong> {{lastGeneratedContrato.nombreContratista}}</p>
+    <p><strong>RUC:</strong> {{lastGeneratedContrato.rucContratista}}</p>
+    <p><strong>Monto:</strong> ${{lastGeneratedContrato.montoContrato | number:'1.2-2'}}</p>
   </div>
 </div>
 
@@ -449,8 +517,7 @@
       <table class="contract-header-table">
         <tr>
           <td class="header-cell-logo" rowspan="3">
-            <img src="https://contratos-pdf-api.onrender.com/assets/logo-hidalgo.png" alt="Logo Hidalgo e Hidalgo"
-              class="logo-img" onerror="this.style.display='none';">
+            <img [src]="logoUrl" alt="Logo Hidalgo e Hidalgo" class="logo-img">
           </td>
           <td rowspan="3" class="header-cell-title">
             CONTRATO PARA LA ADQUISICIÓN DE BIENES

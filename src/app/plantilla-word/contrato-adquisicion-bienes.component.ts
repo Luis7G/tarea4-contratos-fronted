@@ -3,6 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 declare const html2pdf: any;
 import { PdfService } from '../services/pdf.service'; // Importar el servicio
+import { switchMap, map } from 'rxjs/operators';
+import { ResourceService } from '../services/resource.service';
+import Swal from 'sweetalert2';
 
 // Interfaz para estructurar los datos del contrato
 export interface ContratoData {
@@ -145,7 +148,20 @@ export class PlantillaWordComponent implements AfterViewInit {
   uploadedImageUrl: string | null = null;
   tempFileName: string | null = null;
 
-  constructor(private pdfService: PdfService) {
+  // Estados de los botones
+  isGeneratingPdf = false;
+  isUploadingPdf = false;
+  lastGeneratedContrato: any = null;
+
+  // Archivo seleccionado para subir
+  selectedPdfFile: File | null = null;
+
+  logoUrl: string;
+
+  constructor(
+    private pdfService: PdfService,
+    private resourceService: ResourceService
+  ) {
     this.contratoData = {
       // Nuevos campos para representante contratante
       tipoRepresentanteContratante: '',
@@ -218,6 +234,7 @@ export class PlantillaWordComponent implements AfterViewInit {
       anexo2Opcion2_1PlazoGarantiaTecnica: '',
       anexo2Opcion2_2PlazoGarantiaTecnica: '',
     };
+    this.logoUrl = this.resourceService.getLogoUrl();
   }
 
   ngAfterViewInit(): void {
@@ -939,13 +956,6 @@ export class PlantillaWordComponent implements AfterViewInit {
     event.stopPropagation();
   }
 
-  onFileSelected(event: Event): void {
-    const element = event.currentTarget as HTMLInputElement;
-    if (element.files && element.files.length > 0) {
-      this.handleFile(element.files[0]);
-    }
-  }
-
   private handleFile(file: File): void {
     const maxSizeInBytes = 3 * 1024 * 1024; // 3MB
     if (file.size > maxSizeInBytes) {
@@ -977,12 +987,12 @@ export class PlantillaWordComponent implements AfterViewInit {
       next: (response) => {
         this.uploadedImageUrl = response.imageUrl;
         this.tempFileName = response.fileName;
-        console.log('✅ Imagen subida exitosamente:', response);
-        console.log(`📊 Tamaño: ${(response.size / 1024).toFixed(1)}KB`);
-        console.log(`⏰ Expira en: ${response.expiresIn}`);
+        console.log('Imagen subida exitosamente:', response);
+        console.log(`Tamaño: ${(response.size / 1024).toFixed(1)}KB`);
+        console.log(`Expira en: ${response.expiresIn}`);
       },
       error: (error) => {
-        console.error('❌ Error subiendo imagen:', error);
+        console.error('Error subiendo imagen:', error);
         alert(
           'Error al subir la imagen: ' +
             (error.error?.message || 'Error desconocido')
@@ -996,10 +1006,10 @@ export class PlantillaWordComponent implements AfterViewInit {
     if (this.tempFileName) {
       this.pdfService.cleanupTempImage(this.tempFileName).subscribe({
         next: (response) => {
-          console.log('🗑️ Imagen temporal eliminada:', response);
+          console.log('Imagen temporal eliminada:', response);
         },
         error: (error) => {
-          console.warn('⚠️ No se pudo eliminar imagen temporal:', error);
+          console.warn('No se pudo eliminar imagen temporal:', error);
         },
       });
     }
@@ -1039,5 +1049,309 @@ export class PlantillaWordComponent implements AfterViewInit {
 
     const porcentajeRestante = 100 - porcentajeAnticipo;
     return `${porcentajeRestante}%`;
+  }
+
+  // BOTÓN 1: Generar y Descargar PDF
+  async generarYDescargarPdf() {
+    if (!this.validarDatosEsenciales()) {
+      alert('Por favor complete todos los campos obligatorios');
+      return;
+    }
+
+    this.isGeneratingPdf = true;
+
+    try {
+      // Obtener el HTML del contrato
+      const htmlContent = this.getContractHtml();
+
+      // Datos esenciales para el contrato
+      const datosContrato = {
+        nombreContratista: this.contratoData.nombreContratista,
+        rucContratista: this.contratoData.rucContratista,
+        montoContrato:
+          this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros || 0,
+        fechaFirmaContrato: this.getFechaFirmaFormatted(),
+        datosEspecificos: this.getDatosEspecificos(),
+      };
+
+      // Generar PDF y crear contrato
+      const resultado = await this.pdfService
+        .generarPdfYCrearContrato(htmlContent, datosContrato)
+        .toPromise();
+
+      this.lastGeneratedContrato = resultado.contrato;
+
+      // Descargar el PDF generado
+      const pdfBlob = await this.pdfService
+        .descargarArchivo(resultado.pdf.archivoId)
+        .toPromise();
+
+      if (pdfBlob) {
+        this.downloadBlob(
+          pdfBlob,
+          `Contrato_${this.contratoData.rucContratista}.pdf`
+        );
+      } else {
+        throw new Error('No se pudo descargar el archivo PDF');
+      }
+
+      alert(
+        'PDF generado, guardado en base de datos y descargado exitosamente'
+      );
+    } catch (error) {
+      console.error('Error al generar PDF:', error);
+      alert('Error al generar el PDF. Revise la consola para más detalles.');
+    } finally {
+      this.isGeneratingPdf = false;
+    }
+  }
+
+  // BOTÓN 2: Subir PDF existente
+  async subirPdfExistente() {
+    if (!this.selectedPdfFile) {
+      alert('Por favor seleccione un archivo PDF');
+      return;
+    }
+
+    this.isUploadingPdf = true;
+
+    try {
+      // PASO 1: Validar integridad del PDF PRIMERO
+      console.log('🔍 Validando integridad del PDF...');
+      const validacionIntegridad = await this.pdfService
+        .validarIntegridadPdf(this.selectedPdfFile)
+        .toPromise();
+
+      if (!validacionIntegridad.esValido) {
+        alert(`❌ PDF inválido: ${validacionIntegridad.razon}`);
+        return;
+      }
+
+      console.log('✅ PDF válido, solicitando datos...');
+
+      // PASO 2: Si el PDF es válido, ENTONCES pedir datos
+      let datosContrato;
+      if (this.validarDatosEsenciales()) {
+        datosContrato = {
+          nombreContratista: this.contratoData.nombreContratista,
+          rucContratista: this.contratoData.rucContratista,
+          montoContrato:
+            this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros || 0,
+          fechaFirmaContrato: this.getFechaFirmaFormatted(),
+          datosEspecificos: this.getDatosEspecificos(),
+        };
+      } else {
+        datosContrato = await this.mostrarModalDatosMinimos();
+      }
+
+      // PASO 3: Subir PDF ya validado con datos
+      const resultado = await this.pdfService
+        .subirPdfValidadoYCrearContrato(
+          this.selectedPdfFile,
+          datosContrato,
+          validacionIntegridad
+        )
+        .toPromise();
+
+      alert('✅ PDF subido y contrato guardado exitosamente');
+    } catch (error) {
+      console.error('Error al subir PDF:', error);
+      alert('❌ Error al subir el PDF.');
+    } finally {
+      this.isUploadingPdf = false;
+    }
+  }
+
+  // Mostrar modal cuando no hay datos en formulario
+  private async mostrarModalDatosMinimos(): Promise<any> {
+    // Fecha por defecto: hoy
+    const fechaHoy = new Date().toISOString().split('T')[0];
+
+    const { value: datosMinimos } = await Swal.fire({
+      title: 'Datos del Contrato',
+      html: `
+      <input id="nombre" class="swal2-input" placeholder="Nombre Contratista" required>
+      <input id="ruc" class="swal2-input" placeholder="RUC Contratista" required>
+      <input id="monto" class="swal2-input" type="number" placeholder="Monto" step="0.01" min="0" required>
+      <input id="fecha" class="swal2-input" type="date" value="${fechaHoy}" required>
+    `,
+      showCancelButton: true,
+      confirmButtonText: 'Continuar',
+      preConfirm: () => {
+        const nombre = (document.getElementById('nombre') as HTMLInputElement)
+          .value;
+        const ruc = (document.getElementById('ruc') as HTMLInputElement).value;
+        const monto = (document.getElementById('monto') as HTMLInputElement)
+          .value;
+        const fecha = (document.getElementById('fecha') as HTMLInputElement)
+          .value;
+
+        // Validaciones básicas
+        if (!nombre.trim()) {
+          Swal.showValidationMessage(
+            'El nombre del contratista es obligatorio'
+          );
+          return false;
+        }
+        if (!ruc.trim()) {
+          Swal.showValidationMessage('El RUC del contratista es obligatorio');
+          return false;
+        }
+        if (!monto || parseFloat(monto) <= 0) {
+          Swal.showValidationMessage('El monto debe ser mayor a 0');
+          return false;
+        }
+        if (!fecha) {
+          Swal.showValidationMessage('La fecha de firma es obligatoria');
+          return false;
+        }
+
+        return {
+          nombreContratista: nombre.trim(),
+          rucContratista: ruc.trim(),
+          montoContrato: parseFloat(monto),
+          fechaFirmaContrato: fecha, // Ya viene en formato YYYY-MM-DD
+        };
+      },
+    });
+
+    if (!datosMinimos) {
+      throw new Error('Datos cancelados por usuario');
+    }
+
+    console.log('📅 Datos que se enviarán:', datosMinimos);
+    return datosMinimos;
+  }
+
+  // Validar datos esenciales
+  private validarDatosEsenciales(): boolean {
+    return !!(
+      this.contratoData.nombreContratista?.trim() &&
+      this.contratoData.rucContratista?.trim() &&
+      this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros !== null &&
+      this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros > 0 &&
+      this.contratoData.fechaFirmaContratoDia &&
+      this.contratoData.fechaFirmaContratoMes &&
+      this.contratoData.fechaFirmaContratoAnio
+    );
+  }
+
+  // Manejar selección de archivo
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file && file.type === 'application/pdf') {
+      this.selectedPdfFile = file;
+    } else {
+      alert('Por favor seleccione un archivo PDF válido');
+      event.target.value = '';
+    }
+  }
+
+  // Obtener HTML del contrato
+  private getContractHtml(): string {
+    const printElement = document.getElementById('print');
+    return printElement?.innerHTML || '';
+  }
+
+  // Formatear fecha para backend
+  private getFechaFirmaFormatted(): string {
+    const dia = this.contratoData.fechaFirmaContratoDia;
+    const mes = this.getNumeroMes(this.contratoData.fechaFirmaContratoMes);
+    const anio = this.contratoData.fechaFirmaContratoAnio;
+
+    // VALIDAR que todos los campos estén presentes
+    if (!dia || !mes || !anio) {
+      console.warn('Fecha incompleta, usando fecha actual');
+      return new Date().toISOString().split('T')[0];
+    }
+
+    // VALIDAR que los valores sean válidos
+    const diaNum = parseInt(dia);
+    const mesNum = parseInt(mes);
+    const anioNum = parseInt(anio);
+
+    if (
+      diaNum < 1 ||
+      diaNum > 31 ||
+      mesNum < 1 ||
+      mesNum > 12 ||
+      anioNum < 1753 ||
+      anioNum > 9999
+    ) {
+      console.warn('Fecha inválida, usando fecha actual');
+      return new Date().toISOString().split('T')[0];
+    }
+
+    try {
+      const fechaFormateada = `${anioNum}-${mesNum
+        .toString()
+        .padStart(2, '0')}-${diaNum.toString().padStart(2, '0')}`;
+
+      // VALIDAR que la fecha sea válida
+      const fechaTest = new Date(fechaFormateada);
+      if (isNaN(fechaTest.getTime())) {
+        console.warn('Fecha no parseable, usando fecha actual');
+        return new Date().toISOString().split('T')[0];
+      }
+
+      console.log('Fecha formateada:', fechaFormateada);
+      return fechaFormateada;
+    } catch (error) {
+      console.warn('Error formateando fecha, usando fecha actual');
+      return new Date().toISOString().split('T')[0];
+    }
+  }
+
+  // Convertir nombre de mes a número
+  private getNumeroMes(nombreMes: string): string {
+    const meses: { [key: string]: string } = {
+      enero: '01',
+      febrero: '02',
+      marzo: '03',
+      abril: '04',
+      mayo: '05',
+      junio: '06',
+      julio: '07',
+      agosto: '08',
+      septiembre: '09',
+      octubre: '10',
+      noviembre: '11',
+      diciembre: '12',
+    };
+    return meses[nombreMes.toLowerCase()] || '01';
+  }
+
+  // Obtener datos específicos del contrato
+  private getDatosEspecificos(): any {
+    return {
+      descripcionBienes: this.contratoData.clausulaCuartaDescripcionBienes,
+      lugarEntrega: this.contratoData.clausulaCuartaLugarEntrega,
+      incluyeSoporteTecnico: this.contratoData.ofertaContemplaSoporteTecnico,
+      plazoGarantiaTecnica: this.contratoData.plazoGarantiaTecnica,
+      formaPago: this.contratoData.clausulaSextaFormaPagoOpcion,
+    };
+  }
+
+  // Descargar blob como archivo
+  private downloadBlob(blob: Blob, filename: string) {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
+
+  // Limpiar formulario
+  limpiarFormulario() {
+    this.selectedPdfFile = null;
+    this.lastGeneratedContrato = null;
+
+    const fileInput = document.getElementById(
+      'pdfFileInput'
+    ) as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
   }
 }
