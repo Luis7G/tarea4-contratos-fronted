@@ -1164,30 +1164,53 @@ export class PlantillaWordComponent implements AfterViewInit {
 
   // Mostrar modal cuando no hay datos en formulario
   private async mostrarModalDatosMinimos(): Promise<any> {
-    // Usar SweetAlert2 o modal de Angular
+    // Fecha por defecto: hoy
+    const fechaHoy = new Date().toISOString().split('T')[0];
+
     const { value: datosMinimos } = await Swal.fire({
       title: 'Datos del Contrato',
       html: `
-      <input id="nombre" class="swal2-input" placeholder="Nombre Contratista">
-      <input id="ruc" class="swal2-input" placeholder="RUC Contratista">
-      <input id="monto" class="swal2-input" type="number" placeholder="Monto">
-      <input id="fecha" class="swal2-input" type="date">
+      <input id="nombre" class="swal2-input" placeholder="Nombre Contratista" required>
+      <input id="ruc" class="swal2-input" placeholder="RUC Contratista" required>
+      <input id="monto" class="swal2-input" type="number" placeholder="Monto" step="0.01" min="0" required>
+      <input id="fecha" class="swal2-input" type="date" value="${fechaHoy}" required>
     `,
       showCancelButton: true,
       confirmButtonText: 'Continuar',
       preConfirm: () => {
+        const nombre = (document.getElementById('nombre') as HTMLInputElement)
+          .value;
+        const ruc = (document.getElementById('ruc') as HTMLInputElement).value;
+        const monto = (document.getElementById('monto') as HTMLInputElement)
+          .value;
+        const fecha = (document.getElementById('fecha') as HTMLInputElement)
+          .value;
+
+        // Validaciones básicas
+        if (!nombre.trim()) {
+          Swal.showValidationMessage(
+            'El nombre del contratista es obligatorio'
+          );
+          return false;
+        }
+        if (!ruc.trim()) {
+          Swal.showValidationMessage('El RUC del contratista es obligatorio');
+          return false;
+        }
+        if (!monto || parseFloat(monto) <= 0) {
+          Swal.showValidationMessage('El monto debe ser mayor a 0');
+          return false;
+        }
+        if (!fecha) {
+          Swal.showValidationMessage('La fecha de firma es obligatoria');
+          return false;
+        }
+
         return {
-          nombreContratista: (
-            document.getElementById('nombre') as HTMLInputElement
-          ).value,
-          rucContratista: (document.getElementById('ruc') as HTMLInputElement)
-            .value,
-          montoContrato: parseFloat(
-            (document.getElementById('monto') as HTMLInputElement).value
-          ),
-          fechaFirmaContrato: (
-            document.getElementById('fecha') as HTMLInputElement
-          ).value,
+          nombreContratista: nombre.trim(),
+          rucContratista: ruc.trim(),
+          montoContrato: parseFloat(monto),
+          fechaFirmaContrato: fecha, // Ya viene en formato YYYY-MM-DD
         };
       },
     });
@@ -1196,6 +1219,7 @@ export class PlantillaWordComponent implements AfterViewInit {
       throw new Error('Datos cancelados por usuario');
     }
 
+    console.log('📅 Datos que se enviarán:', datosMinimos);
     return datosMinimos;
   }
 
@@ -1235,10 +1259,47 @@ export class PlantillaWordComponent implements AfterViewInit {
     const mes = this.getNumeroMes(this.contratoData.fechaFirmaContratoMes);
     const anio = this.contratoData.fechaFirmaContratoAnio;
 
-    if (dia && mes && anio) {
-      return `${anio}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+    // VALIDAR que todos los campos estén presentes
+    if (!dia || !mes || !anio) {
+      console.warn('Fecha incompleta, usando fecha actual');
+      return new Date().toISOString().split('T')[0];
     }
-    return new Date().toISOString().split('T')[0];
+
+    // VALIDAR que los valores sean válidos
+    const diaNum = parseInt(dia);
+    const mesNum = parseInt(mes);
+    const anioNum = parseInt(anio);
+
+    if (
+      diaNum < 1 ||
+      diaNum > 31 ||
+      mesNum < 1 ||
+      mesNum > 12 ||
+      anioNum < 1753 ||
+      anioNum > 9999
+    ) {
+      console.warn('Fecha inválida, usando fecha actual');
+      return new Date().toISOString().split('T')[0];
+    }
+
+    try {
+      const fechaFormateada = `${anioNum}-${mesNum
+        .toString()
+        .padStart(2, '0')}-${diaNum.toString().padStart(2, '0')}`;
+
+      // VALIDAR que la fecha sea válida
+      const fechaTest = new Date(fechaFormateada);
+      if (isNaN(fechaTest.getTime())) {
+        console.warn('Fecha no parseable, usando fecha actual');
+        return new Date().toISOString().split('T')[0];
+      }
+
+      console.log('Fecha formateada:', fechaFormateada);
+      return fechaFormateada;
+    } catch (error) {
+      console.warn('Error formateando fecha, usando fecha actual');
+      return new Date().toISOString().split('T')[0];
+    }
   }
 
   // Convertir nombre de mes a número
