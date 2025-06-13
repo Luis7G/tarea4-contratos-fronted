@@ -8,6 +8,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, retry } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { switchMap, map } from 'rxjs/operators';
+import { SessionService } from './session.service';
 
 @Injectable({
   providedIn: 'root',
@@ -15,7 +16,10 @@ import { switchMap, map } from 'rxjs/operators';
 export class PdfService {
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private sessionService: SessionService
+  ) {}
 
   // Método existente - mantener
   generatePdfFromHtml(htmlContent: string): Observable<Blob> {
@@ -69,45 +73,150 @@ export class PdfService {
     );
   }
 
-  // NUEVO: Generar PDF y crear contrato en una sola llamada
   generarPdfYCrearContrato(
     htmlContent: string,
     datosContrato: any
   ): Observable<any> {
-    console.log('Generando PDF y creando contrato...');
+    console.log('=== GENERAR PDF Y CREAR CONTRATO ===');
+    console.log('Datos del contrato enviados:', datosContrato);
 
-    // Primero crear el contrato sin PDF
+    // ✅ CREAR OBJETO CON NOMBRES CORRECTOS PARA EL BACKEND
     const contratoData = {
-      tipoContratoCodigo: 'BIENES',
-      nombreContratista: datosContrato.nombreContratista,
-      rucContratista: datosContrato.rucContratista,
-      montoContrato: datosContrato.montoContrato || 0,
-      fechaFirmaContrato: datosContrato.fechaFirmaContrato,
-      usuarioCreadorId: 1,
+      tipoContrato: 'BIENES', // ✅ CORRECTO
+      numeroContrato: datosContrato.numeroContrato || '',
+      objetoContrato: datosContrato.datosEspecificos?.descripcionBienes || '',
+      razonSocialContratista: datosContrato.nombreContratista || '', // ✅ MAPEAR CORRECTAMENTE
+      rucContratista: datosContrato.rucContratista || '',
+      montoTotal: parseFloat(datosContrato.montoContrato?.toString() || '0'), // ✅ CONVERTIR A NÚMERO
+      fechaInicio: this.convertirFechaAISO(datosContrato.fechaFirmaContrato), // ✅ CONVERTIR FECHA
+      fechaFin: this.calcularFechaFin(datosContrato.fechaFirmaContrato), // ✅ CALCULAR FECHA FIN
+      representanteContratante: datosContrato.representanteContratante || '',
+      cargoRepresentante: datosContrato.cargoRepresentante || '',
+      representanteContratista: datosContrato.representanteContratista || '',
+      cedulaRepresentanteContratista:
+        datosContrato.cedulaRepresentanteContratista || '',
+      direccionContratista: datosContrato.direccionContratista || '',
+      telefonoContratista: datosContrato.telefonoContratista || '',
+      emailContratista: datosContrato.emailContratista || '',
+      usuarioId: 1,
       datosEspecificos: datosContrato.datosEspecificos || {},
+      archivosAsociados: [],
     };
 
-    return this.http.post(`${this.apiUrl}/Contratos`, contratoData).pipe(
-      switchMap((contratoResponse: any) => {
-        // Luego generar el PDF para ese contrato
-        const contratoId = contratoResponse.data.id;
-        return this.http
-          .post(
-            `${this.apiUrl}/Contratos/${contratoId}/generar-pdf`,
-            { htmlContent },
-            {
-              headers: { 'Content-Type': 'application/json' },
-            }
-          )
-          .pipe(
-            map((pdfResponse: any) => ({
-              contrato: contratoResponse.data,
-              pdf: pdfResponse.data,
-            }))
+    console.log('✅ Datos transformados para backend:', contratoData);
+
+    // ✅ ENVIAR contratoData EN LUGAR DE datosContrato
+    return this.http
+      .post(
+        `${
+          this.apiUrl
+        }/Contratos?sessionId=${this.sessionService.getSessionId()}`,
+        contratoData // ✅ AHORA SÍ ESTÁ CORRECTO
+      )
+      .pipe(
+        switchMap((contratoResponse: any) => {
+          console.log('Contrato creado exitosamente:', contratoResponse);
+          const contratoId = contratoResponse.data.id;
+
+          return this.http
+            .post(
+              `${this.apiUrl}/Contratos/${contratoId}/generar-pdf`,
+              { htmlContent },
+              { headers: { 'Content-Type': 'application/json' } }
+            )
+            .pipe(
+              map((pdfResponse: any) => ({
+                contrato: contratoResponse.data,
+                pdf: pdfResponse.data,
+              }))
+            );
+        }),
+        catchError((error) => {
+          console.error('=== ERROR DETALLADO ===');
+          console.error('Status:', error.status);
+          console.error('Error Body:', error.error);
+
+          let errorMessage = 'Error desconocido';
+          if (error.error && error.error.message) {
+            errorMessage = error.error.message;
+          } else if (error.error && error.error.title) {
+            errorMessage = error.error.title;
+          } else if (error.statusText) {
+            errorMessage = error.statusText;
+          }
+
+          return throwError(
+            () =>
+              new Error(`Error del servidor: ${error.status} - ${errorMessage}`)
           );
-      }),
-      catchError(this.handleError)
-    );
+        })
+      );
+  }
+
+  // ✅ MÉTODOS AUXILIARES PARA CONVERTIR FECHAS
+  private convertirFechaAISO(fechaString: string): string {
+    try {
+      console.log('Convirtiendo fecha:', fechaString);
+
+      // Si la fecha está en formato "123-01-12", convertir a formato válido
+      if (fechaString && fechaString.includes('-')) {
+        const partes = fechaString.split('-');
+        if (partes.length === 3) {
+          let anio = parseInt(partes[0]);
+          const mes = parseInt(partes[1]);
+          const dia = parseInt(partes[2]);
+
+          // ✅ LÓGICA CORREGIDA PARA AÑO
+          if (anio < 50) {
+            anio = 2000 + anio; // 00-49 = 2000-2049
+          } else if (anio < 100) {
+            anio = 1900 + anio; // 50-99 = 1950-1999
+          } else if (anio < 1000) {
+            anio = 2000 + (anio % 100); // 123 -> 23 -> 2023
+          }
+          // Si anio >= 1000, mantener como está
+
+          // ✅ VALIDAR RANGO DE SQL SERVER
+          if (anio < 1753) anio = 2024;
+          if (anio > 9999) anio = 2024;
+
+          // ✅ VALIDAR MES Y DÍA
+          const mesValido = mes >= 1 && mes <= 12 ? mes : 1;
+          const diaValido = dia >= 1 && dia <= 31 ? dia : 1;
+
+          const fecha = new Date(anio, mesValido - 1, diaValido);
+
+          console.log('Fecha convertida:', fecha.toISOString());
+          return fecha.toISOString();
+        }
+      }
+
+      // Fallback: usar fecha actual
+      const fechaActual = new Date().toISOString();
+      console.log('Usando fecha actual como fallback:', fechaActual);
+      return fechaActual;
+    } catch (error) {
+      console.warn('Error convertir fecha, usando fecha actual:', error);
+      const fechaActual = new Date().toISOString();
+      return fechaActual;
+    }
+  }
+
+  private calcularFechaFin(fechaInicio: string): string {
+    try {
+      const fechaInicioISO = this.convertirFechaAISO(fechaInicio);
+      const fechaInicioDate = new Date(fechaInicioISO);
+      const fechaFin = new Date(fechaInicioDate);
+      fechaFin.setFullYear(fechaFin.getFullYear() + 1); // 1 año después
+
+      console.log('Fecha fin calculada:', fechaFin.toISOString());
+      return fechaFin.toISOString();
+    } catch (error) {
+      console.warn('Error calculando fecha fin:', error);
+      const fechaFin = new Date();
+      fechaFin.setFullYear(fechaFin.getFullYear() + 1);
+      return fechaFin.toISOString();
+    }
   }
 
   // NUEVO: Descargar archivo por ID

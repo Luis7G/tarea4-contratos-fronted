@@ -6,6 +6,10 @@ import { PdfService } from '../services/pdf.service'; // Importar el servicio
 import { switchMap, map } from 'rxjs/operators';
 import { ResourceService } from '../services/resource.service';
 import Swal from 'sweetalert2';
+import { ClaseMonedaLiteral } from '../services/clase-moneda-literal.service';
+import { SessionService } from '../services/session.service';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 // Interfaz para estructurar los datos del contrato
 export interface ContratoData {
@@ -48,6 +52,8 @@ export interface ContratoData {
   clausulaCuartaCapacitacionNumeroServidores: string; // Podría ser number
   clausulaCuartaCapacitacionLugar: string;
   clausulaCuartaCapacitacionPersonalCertificado: string;
+  clausulaCuartaTiempoCapacitacion: string;
+  clausulaCuartaDescripcionCapacitacion: string;
 
   // Cláusula Quinta
   clausulaQuintaPrecioTotalLetrasNumeros: number | null; // MODIFIED: Changed to number | null
@@ -121,6 +127,22 @@ export interface ContratoData {
   anexo2Opcion1_2PlazoGarantiaTecnica: string; // Ya existe en la interfaz original
   anexo2Opcion2_1PlazoGarantiaTecnica: string; // Ya existe
   anexo2Opcion2_2PlazoGarantiaTecnica: string; // Ya existe
+
+  beneficiarioEsExtranjero: boolean;
+  beneficiarioCiudad: string;
+  beneficiarioPais: string;
+  beneficiarioDireccionBanco: string;
+  beneficiarioCodigoSwift: string;
+  requiereFondoGarantia: boolean;
+  clausulaNovenaDiasProrroga: number | null;
+  lugarSuscripcionCiudad: string;
+  lugarSuscripcionPais: string;
+  tipoRepresentanteContratistaJuridica:
+    | 'gerente_general'
+    | 'apoderado_especial'
+    | '';
+  archivosAdjuntos: any[];
+  anticipoEnUnSoloPago: boolean;
 }
 
 @Component({
@@ -157,10 +179,13 @@ export class PlantillaWordComponent implements AfterViewInit {
   selectedPdfFile: File | null = null;
 
   logoUrl: string;
+  archivosAdjuntos: any[] = [];
 
   constructor(
     private pdfService: PdfService,
-    private resourceService: ResourceService
+    private resourceService: ResourceService,
+    private sessionService: SessionService,
+    private http: HttpClient
   ) {
     this.contratoData = {
       // Nuevos campos para representante contratante
@@ -182,6 +207,8 @@ export class PlantillaWordComponent implements AfterViewInit {
       clausulaCuartaCapacitacionNumeroServidores: '',
       clausulaCuartaCapacitacionLugar: '',
       clausulaCuartaCapacitacionPersonalCertificado: '',
+      clausulaCuartaTiempoCapacitacion: '',
+      clausulaCuartaDescripcionCapacitacion: '',
       diasIncumplimientoContratante: null,
       diasSuspensionContratista: null,
       clausulaQuintaPrecioTotalLetrasNumeros: null,
@@ -233,6 +260,18 @@ export class PlantillaWordComponent implements AfterViewInit {
       anexo2Opcion1_2PlazoGarantiaTecnica: '',
       anexo2Opcion2_1PlazoGarantiaTecnica: '',
       anexo2Opcion2_2PlazoGarantiaTecnica: '',
+      beneficiarioEsExtranjero: false,
+      beneficiarioCiudad: '',
+      beneficiarioPais: '',
+      beneficiarioDireccionBanco: '',
+      beneficiarioCodigoSwift: '',
+      requiereFondoGarantia: false,
+      clausulaNovenaDiasProrroga: 5,
+      lugarSuscripcionCiudad: 'San Francisco de Quito',
+      lugarSuscripcionPais: 'Ecuador',
+      tipoRepresentanteContratistaJuridica: '',
+      archivosAdjuntos: [],
+      anticipoEnUnSoloPago: false, // Nuevo campo para indicar si el anticipo es en un solo pago
     };
     this.logoUrl = this.resourceService.getLogoUrl();
   }
@@ -247,6 +286,8 @@ export class PlantillaWordComponent implements AfterViewInit {
       console.log('ContentRef está disponible:', this.contentRef);
     }
   }
+
+  private claseMonedaLiteral = new ClaseMonedaLiteral();
 
   // Métodos para obtener el texto del representante contratante
   getRepresentanteContratanteTexto(): string {
@@ -372,18 +413,14 @@ export class PlantillaWordComponent implements AfterViewInit {
     const price = this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros;
 
     if (price === null || price <= 0) {
-      // Si el precio no es válido, limpiar las opciones dependientes
       this.contratoData.clausulaSextaFormaPagoOpcion = '';
       this.contratoData.clausulaSeptimaGarantiasOpcion = '';
       this.contratoData.requiereGarantiaTecnica = false;
       this.contratoData.requiereGarantiaBuenUsoAnticipo = false;
       this.contratoData.clausulaQuintaPrecioTotalLetras = '';
     } else {
-      // Convertir número a letras usando la librería
       this.contratoData.clausulaQuintaPrecioTotalLetras =
         this.convertirNumeroALetras(price);
-
-      // Actualizar la opción de garantía
       this.updateGuaranteeOption();
     }
   }
@@ -397,8 +434,16 @@ export class PlantillaWordComponent implements AfterViewInit {
       return;
     }
 
-    // Convertir número a letras usando el método existente (sin la parte de moneda)
-    const numeroEnLetras = this.convertirNumeroALetrasSimple(numero);
+    // Usar numeroALetras y eliminar la parte de moneda/centavos
+    const numeroEnLetras = this.claseMonedaLiteral
+      .numeroALetras(numero, {
+        singular: 'DÓLAR',
+        plural: 'DÓLARES',
+        centSingular: 'CENTAVO',
+        centPlural: 'CENTAVOS',
+      })
+      .replace(/DÓLARES.*$/, '')
+      .trim();
 
     // Determinar la unidad en singular o plural
     let unidadTexto = '';
@@ -431,214 +476,18 @@ export class PlantillaWordComponent implements AfterViewInit {
     this.contratoData.clausulaOctavaPeriodoTexto = `${numeroEnLetras} ${unidadTexto}`;
   }
 
-  // Método auxiliar para convertir números a letras (sin moneda)
-  private convertirNumeroALetrasSimple(numero: number): string {
-    if (numero === 0) return 'CERO';
-    if (numero < 0)
-      return 'MENOS ' + this.convertirNumeroALetrasSimple(-numero);
-
-    let resultado = '';
-    let numeroOriginal = Math.floor(numero);
-
-    // Millones
-    if (numeroOriginal >= 1000000) {
-      const millones = Math.floor(numeroOriginal / 1000000);
-      resultado +=
-        this.convertirGrupo(millones) +
-        (millones === 1 ? ' MILLÓN ' : ' MILLONES ');
-      numeroOriginal = numeroOriginal % 1000000;
-    }
-
-    // Miles
-    if (numeroOriginal >= 1000) {
-      const miles = Math.floor(numeroOriginal / 1000);
-      if (miles === 1) {
-        resultado += 'MIL ';
-      } else {
-        resultado += this.convertirGrupo(miles) + ' MIL ';
-      }
-      numeroOriginal = numeroOriginal % 1000;
-    }
-
-    // Centenas, decenas y unidades
-    if (numeroOriginal > 0) {
-      resultado += this.convertirGrupo(numeroOriginal);
-    }
-
-    return resultado.trim();
-  }
-
   private convertirNumeroALetras(numero: number): string {
     if (numero === 0) return 'CERO DÓLARES DE LOS ESTADOS UNIDOS DE AMÉRICA';
     if (numero < 0) return 'MENOS ' + this.convertirNumeroALetras(-numero);
 
-    const unidades = [
-      '',
-      'UNO',
-      'DOS',
-      'TRES',
-      'CUATRO',
-      'CINCO',
-      'SEIS',
-      'SIETE',
-      'OCHO',
-      'NUEVE',
-    ];
-    const especiales = [
-      'DIEZ',
-      'ONCE',
-      'DOCE',
-      'TRECE',
-      'CATORCE',
-      'QUINCE',
-      'DIECISÉIS',
-      'DIECISIETE',
-      'DIECIOCHO',
-      'DIECINUEVE',
-    ];
-    const decenas = [
-      '',
-      '',
-      'VEINTE',
-      'TREINTA',
-      'CUARENTA',
-      'CINCUENTA',
-      'SESENTA',
-      'SETENTA',
-      'OCHENTA',
-      'NOVENTA',
-    ];
-    const centenas = [
-      '',
-      'CIENTO',
-      'DOSCIENTOS',
-      'TRESCIENTOS',
-      'CUATROCIENTOS',
-      'QUINIENTOS',
-      'SEISCIENTOS',
-      'SETECIENTOS',
-      'OCHOCIENTOS',
-      'NOVECIENTOS',
-    ];
+    const currency = {
+      plural: 'DÓLARES DE LOS ESTADOS UNIDOS DE AMÉRICA',
+      singular: 'DÓLAR DE LOS ESTADOS UNIDOS DE AMÉRICA',
+      centPlural: 'CENTAVOS DE DÓLAR',
+      centSingular: 'CENTAVO DE DÓLAR',
+    };
 
-    let resultado = '';
-    let numeroOriginal = Math.floor(numero);
-
-    // Millones
-    if (numeroOriginal >= 1000000) {
-      const millones = Math.floor(numeroOriginal / 1000000);
-      resultado +=
-        this.convertirGrupo(millones) +
-        (millones === 1 ? ' MILLÓN ' : ' MILLONES ');
-      numeroOriginal = numeroOriginal % 1000000;
-    }
-
-    // Miles
-    if (numeroOriginal >= 1000) {
-      const miles = Math.floor(numeroOriginal / 1000);
-      if (miles === 1) {
-        resultado += 'MIL ';
-      } else {
-        resultado += this.convertirGrupo(miles) + ' MIL ';
-      }
-      numeroOriginal = numeroOriginal % 1000;
-    }
-
-    // Centenas, decenas y unidades
-    if (numeroOriginal > 0) {
-      resultado += this.convertirGrupo(numeroOriginal);
-    }
-
-    // Agregar la moneda
-    const parteEntera = Math.floor(numero);
-    if (parteEntera === 1) {
-      resultado += ' DÓLAR DE LOS ESTADOS UNIDOS DE AMÉRICA';
-    } else {
-      resultado += ' DÓLARES DE LOS ESTADOS UNIDOS DE AMÉRICA';
-    }
-
-    return resultado.trim();
-  }
-
-  private convertirGrupo(numero: number): string {
-    const unidades = [
-      '',
-      'UNO',
-      'DOS',
-      'TRES',
-      'CUATRO',
-      'CINCO',
-      'SEIS',
-      'SIETE',
-      'OCHO',
-      'NUEVE',
-    ];
-    const especiales = [
-      'DIEZ',
-      'ONCE',
-      'DOCE',
-      'TRECE',
-      'CATORCE',
-      'QUINCE',
-      'DIECISÉIS',
-      'DIECISIETE',
-      'DIECIOCHO',
-      'DIECINUEVE',
-    ];
-    const decenas = [
-      '',
-      '',
-      'VEINTE',
-      'TREINTA',
-      'CUARENTA',
-      'CINCUENTA',
-      'SESENTA',
-      'SETENTA',
-      'OCHENTA',
-      'NOVENTA',
-    ];
-    const centenas = [
-      '',
-      'CIENTO',
-      'DOSCIENTOS',
-      'TRESCIENTOS',
-      'CUATROCIENTOS',
-      'QUINIENTOS',
-      'SEISCIENTOS',
-      'SETECIENTOS',
-      'OCHOCIENTOS',
-      'NOVECIENTOS',
-    ];
-
-    let resultado = '';
-
-    // Centenas
-    if (numero >= 100) {
-      const cent = Math.floor(numero / 100);
-      if (numero === 100) {
-        resultado += 'CIEN';
-      } else {
-        resultado += centenas[cent];
-      }
-      numero = numero % 100;
-      if (numero > 0) resultado += ' ';
-    }
-
-    // Decenas y unidades
-    if (numero >= 20) {
-      const dec = Math.floor(numero / 10);
-      const uni = numero % 10;
-      resultado += decenas[dec];
-      if (uni > 0) {
-        resultado += ' Y ' + unidades[uni];
-      }
-    } else if (numero >= 10) {
-      resultado += especiales[numero - 10];
-    } else if (numero > 0) {
-      resultado += unidades[numero];
-    }
-
-    return resultado;
+    return this.claseMonedaLiteral.numeroALetras(numero, currency);
   }
 
   // Métodos auxiliares actualizados
@@ -663,54 +512,85 @@ export class PlantillaWordComponent implements AfterViewInit {
     );
   }
 
+  // Métodos para calcular valores automáticamente
+  getValorAnticipo(): number {
+    const precio =
+      this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros || 0;
+    const porcentajeStr =
+      this.contratoData.anexo1ConAnticipoPorcentaje?.replace('%', '') || '0';
+    const porcentaje = parseFloat(porcentajeStr) / 100;
+    return precio * porcentaje;
+  }
+
+  getValorRestante(): number {
+    const precio =
+      this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros || 0;
+    return precio - this.getValorAnticipo();
+  }
+
   // Nuevos métodos para determinar cuándo mostrar checkboxes
   shouldShowGarantiaTecnicaCheckbox(): boolean {
-    const price = this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros;
-    const paymentOption = this.contratoData.clausulaSextaFormaPagoOpcion;
+    // Garantía técnica siempre es obligatoria, no mostrar checkbox
+    return false;
+  }
 
-    // Solo mostrar checkbox si es ≤ 50k SIN anticipo (opcional)
-    return (
-      price !== null &&
-      price <= 50000 &&
-      !!paymentOption &&
-      paymentOption !== 'con_anticipo'
-    );
+  shouldShowFondoGarantiaCheckbox(): boolean {
+    const precio = this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros;
+    // Mostrar checkbox solo para contratos entre 20k y 50k, o menores a 20k
+    return precio !== null && precio < 50000;
   }
 
   shouldShowGarantiaBuenUsoAnticipoCheckbox(): boolean {
-    const price = this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros;
-    const paymentOption = this.contratoData.clausulaSextaFormaPagoOpcion;
+    // Ya no mostrar checkbox porque siempre es obligatoria con anticipo
+    return false;
+  }
 
-    // Solo mostrar checkbox si es ≤ 20k CON anticipo (opcional)
-    return price !== null && price <= 20000 && paymentOption === 'con_anticipo';
+  // Método para determinar si mostrar el campo de período de facturas
+  shouldShowPeriodoFacturas(): boolean {
+    return (
+      this.contratoData.clausulaSextaFormaPagoOpcion === 'con_anticipo' &&
+      !this.contratoData.anticipoEnUnSoloPago
+    );
   }
 
   // Método para determinar si la garantía técnica es obligatoria
   isGarantiaTecnicaObligatoria(): boolean {
-    const price = this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros;
-    const paymentOption = this.contratoData.clausulaSextaFormaPagoOpcion;
+    // Siempre obligatoria
+    return true;
+  }
 
-    if (!price || !paymentOption) return false;
-
-    // Obligatoria si: > 50k (siempre) O ≤ 50k CON anticipo
-    return (
-      price > 50000 || (price <= 50000 && paymentOption === 'con_anticipo')
-    );
+  isFondoGarantiaObligatoria(): boolean {
+    const precio = this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros;
+    // Obligatoria para contratos >= 50k
+    return precio !== null && precio >= 50000;
   }
 
   // Método para determinar si la garantía de buen uso del anticipo es obligatoria
   isGarantiaBuenUsoAnticipoObligatoria(): boolean {
-    const precio = this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros;
     const conAnticipo =
       this.contratoData.clausulaSextaFormaPagoOpcion === 'con_anticipo';
 
-    // Garantía obligatoria para contratos > USD 20,000 con anticipo
-    return precio !== null && precio > 20000 && conAnticipo;
+    // AHORA ES OBLIGATORIA SIEMPRE que haya anticipo
+    return conAnticipo;
   }
 
+  // Método para limpiar campos cuando cambia la opción de pago
   onPaymentOptionChange(): void {
-    // Cuando cambia la opción de pago, actualizar la opción de garantía
+    // Limpiar campos relacionados cuando cambia la forma de pago
+    if (this.contratoData.clausulaSextaFormaPagoOpcion !== 'con_anticipo') {
+      this.contratoData.anticipoEnUnSoloPago = false;
+      this.contratoData.anexo1ConAnticipoPeriodoFacturas = '';
+    }
+
     this.updateGuaranteeOption();
+  }
+
+  // Método para manejar el cambio del checkbox de un solo pago
+  onAnticipoUnSoloPagoChange(): void {
+    if (this.contratoData.anticipoEnUnSoloPago) {
+      // Limpiar el campo de período de facturas si se selecciona un solo pago
+      this.contratoData.anexo1ConAnticipoPeriodoFacturas = '';
+    }
   }
 
   // Métodos auxiliares
@@ -956,6 +836,17 @@ export class PlantillaWordComponent implements AfterViewInit {
     event.stopPropagation();
   }
 
+  public convertirNumeroALetrasSimple(numero: number): string {
+    const numeros: { [key: number]: string } = {
+      1: 'uno',
+      2: 'dos',
+      3: 'tres',
+      4: 'cuatro',
+      5: 'cinco',
+    };
+    return numeros[numero] || numero.toString();
+  }
+
   private handleFile(file: File): void {
     const maxSizeInBytes = 3 * 1024 * 1024; // 3MB
     if (file.size > maxSizeInBytes) {
@@ -1061,20 +952,47 @@ export class PlantillaWordComponent implements AfterViewInit {
     this.isGeneratingPdf = true;
 
     try {
-      // Obtener el HTML del contrato
       const htmlContent = this.getContractHtml();
 
-      // Datos esenciales para el contrato
+      // ✅ DATOS COMPLETOS Y CORREGIDOS
       const datosContrato = {
-        nombreContratista: this.contratoData.nombreContratista,
-        rucContratista: this.contratoData.rucContratista,
+        // ✅ Campos básicos CORREGIDOS
+        nombreContratista: this.contratoData.nombreContratista || '',
+        rucContratista: this.contratoData.rucContratista || '',
         montoContrato:
           this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros || 0,
-        fechaFirmaContrato: this.getFechaFirmaFormatted(),
-        datosEspecificos: this.getDatosEspecificos(),
+
+        // ✅ FECHA FORMATEADA CORRECTAMENTE
+        fechaFirmaContrato: this.getFechaFirmaFormattedISO(),
+
+        // ✅ Campos adicionales
+        representanteContratante: this.getRepresentanteContratanteNombre(),
+        cargoRepresentante: this.getRepresentanteContratanteCargo(),
+        representanteContratista:
+          this.contratoData.representanteLegalContratista || '',
+        direccionContratista:
+          this.contratoData.contratistaDireccionComunicaciones || '',
+        telefonoContratista:
+          this.contratoData.contratistaTelefonosComunicaciones || '',
+        emailContratista:
+          this.contratoData.contratistaCorreoComunicaciones || '',
+
+        // ✅ Datos específicos
+        datosEspecificos: {
+          descripcionBienes:
+            this.contratoData.clausulaCuartaDescripcionBienes || '',
+          lugarEntrega: this.contratoData.clausulaCuartaLugarEntrega || '',
+          incluyeSoporteTecnico:
+            this.contratoData.ofertaContemplaSoporteTecnico,
+          plazoGarantiaTecnica: this.contratoData.plazoGarantiaTecnica || '',
+          formaPago: this.contratoData.clausulaSextaFormaPagoOpcion || '',
+          contratoData: this.contratoData,
+          archivosAdjuntos: this.archivosAdjuntos,
+        },
       };
 
-      // Generar PDF y crear contrato
+      console.log('✅ Datos completos para envío:', datosContrato);
+
       const resultado = await this.pdfService
         .generarPdfYCrearContrato(htmlContent, datosContrato)
         .toPromise();
@@ -1087,12 +1005,11 @@ export class PlantillaWordComponent implements AfterViewInit {
         .toPromise();
 
       if (pdfBlob) {
-        this.downloadBlob(
-          pdfBlob,
-          `Contrato_${this.contratoData.rucContratista}.pdf`
-        );
-      } else {
-        throw new Error('No se pudo descargar el archivo PDF');
+        const fecha = new Date().toISOString().slice(0, 10);
+        const nombreArchivo = `contrato-${
+          this.contratoData.nombreContratista || 'sin-nombre'
+        }-${fecha}.pdf`;
+        this.downloadBlob(pdfBlob, nombreArchivo);
       }
 
       alert(
@@ -1100,10 +1017,35 @@ export class PlantillaWordComponent implements AfterViewInit {
       );
     } catch (error) {
       console.error('Error al generar PDF:', error);
-      alert('Error al generar el PDF. Revise la consola para más detalles.');
+      alert(
+        'Error al generar el PDF: ' +
+          (error instanceof Error ? error.message : 'Error desconocido')
+      );
     } finally {
       this.isGeneratingPdf = false;
     }
+  }
+
+  // ✅ NUEVO MÉTODO PARA FECHA ISO
+  private getFechaFirmaFormattedISO(): string {
+    const dia = this.contratoData.fechaFirmaContratoDia;
+    const mes = this.getNumeroMes(this.contratoData.fechaFirmaContratoMes);
+    const anio = this.contratoData.fechaFirmaContratoAnio;
+
+    if (dia && mes && anio) {
+      try {
+        const fecha = new Date(
+          parseInt(anio),
+          parseInt(mes) - 1,
+          parseInt(dia)
+        );
+        return fecha.toISOString();
+      } catch (error) {
+        console.warn('Error formateando fecha, usando fecha actual');
+      }
+    }
+
+    return new Date().toISOString();
   }
 
   // BOTÓN 2: Subir PDF existente
@@ -1215,18 +1157,171 @@ export class PlantillaWordComponent implements AfterViewInit {
   // Manejar selección de archivo
   onFileSelected(event: any) {
     const file = event.target.files[0];
-    if (file && file.type === 'application/pdf') {
-      this.selectedPdfFile = file;
-    } else {
-      alert('Por favor seleccione un archivo PDF válido');
-      event.target.value = '';
+
+    // Si el input es para imagen (tabla de cantidades)
+    if (event.target.accept === 'image/*') {
+      this.handleFile(file);
     }
+    // Si el input es para PDF (archivo existente)
+    else if (event.target.id === 'pdfFileInput') {
+      if (file && file.type === 'application/pdf') {
+        this.selectedPdfFile = file;
+      } else {
+        alert('Por favor seleccione un archivo PDF válido');
+        event.target.value = '';
+      }
+    }
+  }
+
+  onImageFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.handleFile(file);
+    }
+  }
+
+  async generarPDF() {
+    try {
+      this.isGeneratingPdf = true;
+
+      if (!this.validarCamposObligatorios()) {
+        this.isGeneratingPdf = false;
+        return;
+      }
+
+      console.log('=== PREPARANDO DATOS DEL CONTRATO ===');
+
+      // ✅ VALIDAR FECHAS CORRECTAS
+      const fechaInicio = new Date();
+      const fechaFin = new Date();
+      fechaFin.setFullYear(fechaInicio.getFullYear() + 1); // 1 año después
+
+      const contratoData = {
+        tipoContrato: 'BIENES',
+        numeroContrato: this.contratoData.clausulaPrimeraAntecedentes || '',
+        objetoContrato: this.contratoData.clausulaCuartaDescripcionBienes || '',
+        razonSocialContratista: this.contratoData.nombreContratista || '',
+        rucContratista: this.contratoData.rucContratista || '',
+        montoTotal: parseFloat(
+          this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros?.toString() ||
+            '0'
+        ),
+        fechaInicio: fechaInicio.toISOString(),
+        fechaFin: fechaFin.toISOString(),
+        representanteContratante: this.getRepresentanteContratanteNombre(),
+        cargoRepresentante: this.getRepresentanteContratanteCargo(),
+        representanteContratista:
+          this.contratoData.representanteLegalContratista || '',
+        cedulaRepresentanteContratista: '',
+        direccionContratista:
+          this.contratoData.contratistaDireccionComunicaciones || '',
+        telefonoContratista:
+          this.contratoData.contratistaTelefonosComunicaciones || '',
+        emailContratista:
+          this.contratoData.contratistaCorreoComunicaciones || '',
+        usuarioId: 1,
+        datosEspecificos: {
+          contratoData: this.contratoData,
+          archivosAdjuntos: this.archivosAdjuntos,
+        },
+        archivosAsociados: [], // Lista vacía por ahora
+      };
+
+      console.log('Datos preparados para envío:', contratoData);
+
+      // Validar campos críticos antes de enviar
+      if (!contratoData.razonSocialContratista) {
+        throw new Error('El nombre del contratista es obligatorio');
+      }
+      if (!contratoData.rucContratista) {
+        throw new Error('El RUC del contratista es obligatorio');
+      }
+      if (contratoData.montoTotal <= 0) {
+        throw new Error('El monto total debe ser mayor a 0');
+      }
+
+      const resultado = await this.http
+        .post(
+          `${
+            environment.apiUrl
+          }/Contratos?sessionId=${this.sessionService.getSessionId()}`,
+          contratoData
+        )
+        .toPromise();
+
+      console.log('Contrato creado exitosamente:', resultado);
+    } catch (error: any) {
+      console.error('=== ERROR AL GENERAR CONTRATO ===');
+      console.error('Error completo:', error);
+      alert(
+        'Error al crear el contrato: ' + (error.error?.message || error.message)
+      );
+    } finally {
+      this.isGeneratingPdf = false;
+    }
+  }
+
+  private async generarPDFFromHTML(htmlContent: string, fileName: string) {
+    try {
+      console.log('Generando PDF desde HTML...');
+
+      const response = await this.pdfService
+        .generatePdfFromHtml(htmlContent)
+        .toPromise();
+
+      if (response) {
+        this.downloadBlob(response, `${fileName}.pdf`);
+        console.log('PDF descargado exitosamente');
+      }
+    } catch (error) {
+      console.error('Error generando PDF:', error);
+      throw error;
+    }
+  }
+
+  private validarCamposObligatorios(): boolean {
+    // Validar datos básicos
+    if (!this.contratoData.nombreContratista?.trim()) {
+      alert('El nombre del contratista es obligatorio');
+      return false;
+    }
+
+    if (!this.contratoData.rucContratista?.trim()) {
+      alert('El RUC del contratista es obligatorio');
+      return false;
+    }
+
+    if (
+      !this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros ||
+      this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros <= 0
+    ) {
+      alert('El precio total del contrato es obligatorio y debe ser mayor a 0');
+      return false;
+    }
+
+    // Validar archivos obligatorios
+    const tiposObligatorios = ['CEDULA_REPRESENTANTE', 'RUC_EMPRESA'];
+
+    for (const tipo of tiposObligatorios) {
+      const tieneArchivo = this.archivosAdjuntos.some(
+        (a) => a.tipoArchivoCodigo === tipo
+      );
+      if (!tieneArchivo) {
+        alert(`Falta el archivo obligatorio: ${tipo}`);
+        return false;
+      }
+    }
+
+    return true;
   }
 
   // Obtener HTML del contrato
   private getContractHtml(): string {
-    const printElement = document.getElementById('print');
-    return printElement?.innerHTML || '';
+    if (!this.contentRef?.nativeElement) {
+      throw new Error('No se puede obtener el contenido del contrato');
+    }
+
+    return this.contentRef.nativeElement.innerHTML;
   }
 
   // Formatear fecha para backend
@@ -1292,5 +1387,74 @@ export class PlantillaWordComponent implements AfterViewInit {
       'pdfFileInput'
     ) as HTMLInputElement;
     if (fileInput) fileInput.value = '';
+  }
+
+  getRepresentanteContratanteNombre(): string {
+    switch (this.contratoData.tipoRepresentanteContratante) {
+      case 'gerente_general':
+        return 'Diego Fernando Zárate Valdivieso';
+      case 'apoderado_especial':
+        return this.getNombreApoderadoEspecial();
+      case 'superintendente':
+        return (
+          this.contratoData.nombreSuperintendente || '[NOMBRE_SUPERINTENDENTE]'
+        );
+      default:
+        return '[NOMBRE_REPRESENTANTE]';
+    }
+  }
+
+  getRepresentanteContratanteCargo(): string {
+    switch (this.contratoData.tipoRepresentanteContratante) {
+      case 'gerente_general':
+        return 'Gerente General';
+      case 'apoderado_especial':
+        return 'Apoderado Especial';
+      case 'superintendente':
+        return `Superintendente del Proyecto ${
+          this.contratoData.nombreProyectoSuperintendente || '[PROYECTO]'
+        }`;
+      default:
+        return '[CARGO_REPRESENTANTE]';
+    }
+  }
+
+  onArchivoSubido(archivo: any, tipoArchivo: string) {
+    if (archivo) {
+      console.log(`Archivo ${tipoArchivo} subido:`, archivo);
+
+      // Buscar si ya existe un archivo de este tipo
+      const index = this.archivosAdjuntos.findIndex(
+        (a) => a.tipoArchivoCodigo === archivo.tipoArchivoCodigo
+      );
+
+      if (index >= 0) {
+        // Reemplazar archivo existente
+        this.archivosAdjuntos[index] = archivo;
+      } else {
+        // Agregar nuevo archivo
+        this.archivosAdjuntos.push(archivo);
+      }
+    } else {
+      // Eliminar archivo si es null
+      this.archivosAdjuntos = this.archivosAdjuntos.filter(
+        (a) => a.tipoArchivoCodigo !== tipoArchivo
+      );
+    }
+
+    console.log('Archivos adjuntos actuales:', this.archivosAdjuntos);
+  }
+
+  isContratoMayorA10k(): boolean {
+    const precio = this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros;
+    return precio !== null && precio > 10000;
+  }
+
+  getDescripcionPolizaAnticipo(): string {
+    const precio = this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros;
+    if (precio && precio >= 20000) {
+      return 'Obligatorio para contratos ≥ $20,000 con anticipo';
+    }
+    return 'Opcional para contratos < $20,000 con anticipo';
   }
 }
