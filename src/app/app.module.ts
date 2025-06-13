@@ -7,6 +7,7 @@ import { PlantillaWordComponent } from './plantilla-word/contrato-adquisicion-bi
 import { ReactiveFormsModule } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { ArchivoAdjuntoComponent } from './plantilla-word/archivo-adjunto/archivo-adjunto.component';
 
 @NgModule({
   declarations: [AppComponent, PlantillaWordComponent],
@@ -18,6 +19,7 @@ import { CommonModule } from '@angular/common';
     FormsModule,
     CommonModule,
     AppRoutingModule,
+    ArchivoAdjuntoComponent,
   ],
   providers: [],
   bootstrap: [AppComponent],

@@ -1,0 +1,163 @@
+/* filepath: d:\Projects\Work\Task-4-Contratos\plantillaWordApp\src\app\components\archivo-adjunto\archivo-adjunto.component.css */
+.archivo-adjunto-container {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 15px;
+  background: white;
+  margin-bottom: 10px;
+}
+
+.archivo-adjunto-container.obligatorio {
+  border-left: 4px solid #dc3545;
+}
+
+.archivo-header h5 {
+  margin: 0 0 5px 0;
+  font-size: 0.95em;
+  color: #333;
+}
+
+.obligatorio-badge {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.descripcion {
+  margin: 0 0 10px 0;
+  font-size: 0.8em;
+  color: #666;
+}
+
+.archivo-dropzone {
+  border: 2px dashed #ccc;
+  border-radius: 6px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.archivo-dropzone:hover {
+  border-color: #2c5aa0;
+  background-color: #f8f9fa;
+}
+
+.archivo-dropzone.has-file {
+  border-color: #28a745;
+  background-color: #f8fff9;
+}
+
+.archivo-dropzone.uploading {
+  border-color: #ffc107;
+  background-color: #fffbf0;
+}
+
+.dropzone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dropzone-content i {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.dropzone-content span {
+  font-size: 0.9em;
+  margin-bottom: 4px;
+}
+
+.dropzone-content small {
+  color: #666;
+  font-size: 0.8em;
+}
+
+.uploading-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #ffc107;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.file-info i {
+  font-size: 20px;
+}
+
+.file-details {
+  flex: 1;
+  text-align: left;
+}
+
+.file-details strong {
+  display: block;
+  font-size: 0.9em;
+}
+
+.file-details small {
+  color: #666;
+  font-size: 0.8em;
+}
+
+.btn-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 3px;
+}
+
+.btn-remove:hover {
+  background-color: #f8f9fa;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 0.8em;
+  margin-top: 5px;
+  text-align: left;
+}
+
+/* Grid para archivos */
+.archivos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.archivos-categoria {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.archivos-categoria h4 {
+  margin: 0 0 15px 0;
+  font-size: 1.1em;
+}
