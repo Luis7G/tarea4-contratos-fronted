@@ -758,35 +758,50 @@ export class PlantillaWordComponent implements AfterViewInit {
 
   async generatePDF() {
     try {
-      console.log('Generando PDF con backend...');
+      this.isGeneratingPdf = true;
 
-      if (!this.contentRef?.nativeElement) {
-        console.error('Elemento de contenido no encontrado');
+      if (!this.validarCamposObligatorios()) {
+        this.isGeneratingPdf = false;
         return;
       }
 
-      // Obtén el HTML tal como lo tienes en el frontend
+      console.log('=== GENERANDO PDF CON DATOS DE FIRMAS ===');
+
+      if (!this.contentRef?.nativeElement) {
+        throw new Error('No se puede obtener el contenido del contrato');
+      }
+
+      // Obtener el HTML del contrato
       const htmlContent = this.contentRef.nativeElement.innerHTML;
 
-      this.pdfService.generatePdfFromHtml(htmlContent).subscribe({
-        next: (pdfBlob: Blob) => {
-          const url = window.URL.createObjectURL(pdfBlob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `contrato_${
-            this.contratoData.nombreContratista || 'documento'
-          }.pdf`;
-          link.click();
-          window.URL.revokeObjectURL(url);
-          console.log('PDF generado exitosamente');
-        },
-        error: (error) => {
-          console.error('Error generando PDF:', error);
-          alert('Error al generar el PDF');
-        },
-      });
-    } catch (error) {
-      console.error('Error:', error);
+      console.log('Generando PDF solo con HTML...');
+
+      // ✅ USAR EL MÉTODO EXISTENTE QUE SÍ EXISTE
+      const response = await this.pdfService
+        .generatePdfFromHtml(htmlContent)
+        .toPromise();
+
+      if (response) {
+        const blob = new Blob([response], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `contrato-${
+          this.contratoData.nombreContratista || 'sin-nombre'
+        }-${new Date().toISOString().slice(0, 10)}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+
+        console.log('✅ PDF generado exitosamente');
+      }
+    } catch (error: any) {
+      console.error('=== ERROR AL GENERAR PDF ===');
+      console.error('Error completo:', error);
+      alert(
+        'Error al generar el PDF: ' + (error.error?.message || error.message)
+      );
+    } finally {
+      this.isGeneratingPdf = false;
     }
   }
 
