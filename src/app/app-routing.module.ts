@@ -1,11 +1,11 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { PlantillaWordComponent } from './plantilla-word/contrato-adquisicion-bienes.component';
+import { PlantillaWordComponent } from './components/adquisicion-bienes/contrato-adquisicion-bienes.component';
 
 const routes: Routes = [
   { path: '', redirectTo: '/contrato-adquisicion-bienes', pathMatch: 'full' },
   { path: 'contrato-adquisicion-bienes', component: PlantillaWordComponent },
-  { path: '**', redirectTo: '/contrato-adquisicion-bienes' }, // Wildcard route
+  { path: '**', redirectTo: '/contrato-adquisicion-bienes' },
 ];
 
 @NgModule({

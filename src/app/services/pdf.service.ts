@@ -4,7 +4,7 @@ import {
   HttpHeaders,
   HttpErrorResponse,
 } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable, throwError, of } from 'rxjs'; // ✅ Agregar 'of'
 import { catchError, retry } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { switchMap, map } from 'rxjs/operators';
@@ -80,77 +80,143 @@ export class PdfService {
     console.log('=== GENERAR PDF Y CREAR CONTRATO ===');
     console.log('Datos del contrato enviados:', datosContrato);
 
-    // ✅ CREAR OBJETO CON NOMBRES CORRECTOS PARA EL BACKEND
-    const contratoData = {
-      tipoContrato: 'BIENES', // ✅ CORRECTO
-      numeroContrato: datosContrato.numeroContrato || '',
-      objetoContrato: datosContrato.datosEspecificos?.descripcionBienes || '',
-      razonSocialContratista: datosContrato.nombreContratista || '', // ✅ MAPEAR CORRECTAMENTE
-      rucContratista: datosContrato.rucContratista || '',
-      montoTotal: parseFloat(datosContrato.montoContrato?.toString() || '0'), // ✅ CONVERTIR A NÚMERO
-      fechaInicio: this.convertirFechaAISO(datosContrato.fechaFirmaContrato), // ✅ CONVERTIR FECHA
-      fechaFin: this.calcularFechaFin(datosContrato.fechaFirmaContrato), // ✅ CALCULAR FECHA FIN
-      representanteContratante: datosContrato.representanteContratante || '',
-      cargoRepresentante: datosContrato.cargoRepresentante || '',
-      representanteContratista: datosContrato.representanteContratista || '',
-      cedulaRepresentanteContratista:
-        datosContrato.cedulaRepresentanteContratista || '',
-      direccionContratista: datosContrato.direccionContratista || '',
-      telefonoContratista: datosContrato.telefonoContratista || '',
-      emailContratista: datosContrato.emailContratista || '',
-      usuarioId: 1,
-      datosEspecificos: datosContrato.datosEspecificos || {},
-      archivosAsociados: [],
+    // ✅ OBTENER MONTO REAL DEL CONTRATO
+    const montoReal =
+      datosContrato.clausulaQuintaPrecioTotalLetrasNumeros ||
+      datosContrato.montoContrato ||
+      datosContrato.MontoTotal ||
+      0;
+
+    // ✅ OBTENER FECHA REAL DEL CONTRATO
+    const fechaFirma =
+      datosContrato.clausulaOctavaFechaFirmaContrato ||
+      datosContrato.fechaFirmaContrato ||
+      datosContrato.FechaFirmaContrato ||
+      new Date().toISOString();
+
+    console.log('Monto extraído:', montoReal);
+    console.log('Fecha extraída:', fechaFirma);
+
+    // ✅ MAPEAR CORRECTAMENTE AL DTO DEL BACKEND
+    const datosTransformados = {
+      TipoContrato: 'BIENES', // ✅ Pascal Case como espera el DTO
+      NumeroContrato: '',
+      ObjetoContrato: datosContrato.nombreContratista || 'Contrato de Bienes',
+      RazonSocialContratista: datosContrato.nombreContratista || '', // ✅ Pascal Case
+      RucContratista: datosContrato.rucContratista || '', // ✅ Pascal Case
+      MontoTotal: montoReal, // ✅ Pascal Case y valor real
+      FechaInicio: this.convertirFechaAISO(fechaFirma), // ✅ Pascal Case
+      FechaFin: this.calcularFechaFin(fechaFirma), // ✅ Pascal Case
+      RepresentanteContratante:
+        datosContrato.representanteContratante ||
+        'Diego Fernando Zárate Valdivieso',
+      CargoRepresentante: datosContrato.cargoRepresentante || 'Gerente General',
+      RepresentanteContratista:
+        datosContrato.representanteContratista ||
+        datosContrato.nombreContratista ||
+        '',
+      CedulaRepresentanteContratista: '',
+      DireccionContratista: '',
+      TelefonoContratista: '',
+      EmailContratista: '',
+      UsuarioId: 1, // ✅ Pascal Case
+      DatosEspecificos: datosContrato, // ✅ Pascal Case
+      ArchivosAsociados: [], // ✅ Pascal Case
     };
 
-    console.log('✅ Datos transformados para backend:', contratoData);
+    console.log('✅ Datos transformados para backend:', datosTransformados);
 
-    // ✅ ENVIAR contratoData EN LUGAR DE datosContrato
-    return this.http
-      .post(
-        `${
-          this.apiUrl
-        }/Contratos?sessionId=${this.sessionService.getSessionId()}`,
-        contratoData // ✅ AHORA SÍ ESTÁ CORRECTO
-      )
-      .pipe(
-        switchMap((contratoResponse: any) => {
-          console.log('Contrato creado exitosamente:', contratoResponse);
-          const contratoId = contratoResponse.data.id;
-
-          return this.http
-            .post(
-              `${this.apiUrl}/Contratos/${contratoId}/generar-pdf`,
-              { htmlContent },
-              { headers: { 'Content-Type': 'application/json' } }
-            )
-            .pipe(
-              map((pdfResponse: any) => ({
-                contrato: contratoResponse.data,
-                pdf: pdfResponse.data,
-              }))
-            );
-        }),
-        catchError((error) => {
-          console.error('=== ERROR DETALLADO ===');
-          console.error('Status:', error.status);
-          console.error('Error Body:', error.error);
-
-          let errorMessage = 'Error desconocido';
-          if (error.error && error.error.message) {
-            errorMessage = error.error.message;
-          } else if (error.error && error.error.title) {
-            errorMessage = error.error.title;
-          } else if (error.statusText) {
-            errorMessage = error.statusText;
-          }
-
-          return throwError(
-            () =>
-              new Error(`Error del servidor: ${error.status} - ${errorMessage}`)
-          );
-        })
+    // Validar antes de enviar
+    if (datosTransformados.MontoTotal <= 0) {
+      console.error(
+        '❌ MontoTotal debe ser mayor a 0:',
+        datosTransformados.MontoTotal
       );
+      return throwError(
+        () => new Error('El monto del contrato debe ser mayor a 0')
+      );
+    }
+
+    if (!datosTransformados.RazonSocialContratista?.trim()) {
+      console.error('❌ RazonSocialContratista es requerida');
+      return throwError(
+        () => new Error('La razón social del contratista es requerida')
+      );
+    }
+
+    if (!datosTransformados.RucContratista?.trim()) {
+      console.error('❌ RucContratista es requerido');
+      return throwError(() => new Error('El RUC del contratista es requerido'));
+    }
+
+    // ✅ CREAR CONTRATO CON DATOS CORREGIDOS
+    return this.http.post(`${this.apiUrl}/contratos`, datosTransformados).pipe(
+      switchMap((contratoResponse: any) => {
+        console.log('Contrato creado exitosamente:', contratoResponse);
+        const contratoId = contratoResponse.contrato?.id;
+
+        if (!contratoId) {
+          throw new Error('No se pudo obtener el ID del contrato creado');
+        }
+
+        // ✅ GENERAR PDF CON DATOS DEL CONTRATO
+        const pdfRequestBody = {
+          htmlContent: htmlContent,
+          contratoData: {
+            representanteContratista:
+              datosTransformados.RepresentanteContratista,
+            razonSocialContratista: datosTransformados.RazonSocialContratista,
+            cargoRepresentante: datosTransformados.CargoRepresentante,
+            rucContratista: datosTransformados.RucContratista,
+            montoContrato: datosTransformados.MontoTotal,
+          },
+        };
+
+        console.log('Generando PDF para contrato ID:', contratoId);
+
+        return this.generatePdf(pdfRequestBody).pipe(
+          map((pdfBlob: Blob) => {
+            console.log('✅ PDF generado exitosamente');
+            return {
+              contrato: contratoResponse.contrato,
+              pdfBlob: pdfBlob,
+              success: true,
+            };
+          }),
+          catchError((pdfError) => {
+            console.error('Error generando PDF:', pdfError);
+            return of({
+              contrato: contratoResponse.contrato,
+              pdfBlob: null,
+              success: false,
+              error: 'Error generando PDF, pero contrato creado exitosamente',
+            });
+          })
+        );
+      }),
+      catchError((error) => {
+        console.error('=== ERROR DETALLADO ===');
+        console.error('Error completo:', error);
+        console.error('Status:', error.status);
+        console.error('Message:', error.message);
+        console.error('Error object:', error.error);
+
+        let errorMessage = 'Error desconocido';
+        if (error.error?.errors?.MontoTotal) {
+          errorMessage = `Error en MontoTotal: ${error.error.errors.MontoTotal.join(
+            ', '
+          )}`;
+        } else if (error.error?.title) {
+          errorMessage = error.error.title;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+
+        return throwError(
+          () => new Error(`Error del servidor: ${errorMessage}`)
+        );
+      })
+    );
   }
 
   // ✅ MÉTODOS AUXILIARES PARA CONVERTIR FECHAS
@@ -292,5 +358,39 @@ export class PdfService {
     return this.http
       .post(`${this.apiUrl}/Contratos/SubirPdfValidado`, formData)
       .pipe(catchError(this.handleError));
+  }
+
+  generatePdf(requestBody: {
+    htmlContent: string;
+    contratoData?: any;
+  }): Observable<Blob> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      Accept: 'application/pdf',
+    });
+
+    console.log(
+      'Enviando request con datos de contrato a:',
+      `${this.apiUrl}/pdf/generate`
+    );
+    console.log('Request body contratoData:', requestBody.contratoData);
+
+    return this.http
+      .post(
+        `${this.apiUrl}/pdf/generate`,
+        requestBody, // ✅ ENVIAR EL OBJETO COMPLETO CON htmlContent Y contratoData
+        {
+          headers,
+          responseType: 'blob',
+          withCredentials: false,
+        }
+      )
+      .pipe(
+        retry(1),
+        catchError((error) => {
+          console.error('Error generando PDF:', error);
+          return this.handleError(error);
+        })
+      );
   }
 }

@@ -7,62 +7,7 @@ import { SessionService } from '../../services/session.service';
 @Component({
   selector: 'app-archivo-adjunto',
   imports: [CommonModule],
-  template: `
-    <div class="archivo-adjunto-container" [class.obligatorio]="esObligatorio">
-      <div class="archivo-header">
-        <h5>
-          {{ titulo }}
-          <span *ngIf="esObligatorio" class="obligatorio-badge">*</span>
-        </h5>
-        <p *ngIf="descripcion" class="descripcion">{{ descripcion }}</p>
-      </div>
-
-      <div
-        class="archivo-dropzone"
-        (drop)="onFileDropped($event)"
-        (dragover)="onDragOver($event)"
-        (dragleave)="onDragLeave($event)"
-        (click)="fileInput.click()"
-        [class.has-file]="archivoActual"
-        [class.uploading]="isUploading"
-      >
-        <input
-          type="file"
-          #fileInput
-          style="display: none"
-          (change)="onFileSelected($event)"
-          accept=".pdf,.jpg,.jpeg,.png"
-        />
-
-        <div *ngIf="!archivoActual && !isUploading" class="dropzone-content">
-          <i class="📎"></i>
-          <span>Arrastra o haz clic para subir</span>
-          <small>PDF, JPG, PNG (máx. 5MB)</small>
-        </div>
-
-        <div *ngIf="isUploading" class="uploading-content">
-          <div class="spinner"></div>
-          <span>Subiendo...</span>
-        </div>
-
-        <div *ngIf="archivoActual" class="file-info">
-          <i class="✅"></i>
-          <div class="file-details">
-            <strong>{{ archivoActual.nombreOriginal }}</strong>
-            <small
-              >{{ formatFileSize(archivoActual['tamaño']) }} -
-              {{ formatDate(archivoActual.fechaSubida) }}</small
-            >
-          </div>
-          <button type="button" class="btn-remove" (click)="eliminarArchivo()">
-            ❌
-          </button>
-        </div>
-      </div>
-
-      <div *ngIf="error" class="error-message">{{ error }}</div>
-    </div>
-  `,
+  templateUrl: './archivo-adjunto.component.html',
   styleUrls: ['./archivo-adjunto.component.css'],
 })
 export class ArchivoAdjuntoComponent {
@@ -70,7 +15,7 @@ export class ArchivoAdjuntoComponent {
   @Input() codigo: string = '';
   @Input() esObligatorio: boolean = false;
   @Input() descripcion?: string;
-  @Input() contratoId: number | null = null; // Ya no es necesario para archivos temporales
+  @Input() contratoId: number | null = null;
   @Output() archivoSubido = new EventEmitter<any>();
 
   archivoActual: any = null;
@@ -82,6 +27,7 @@ export class ArchivoAdjuntoComponent {
     private http: HttpClient,
     private sessionService: SessionService
   ) {}
+
   onFileDropped(event: DragEvent) {
     event.preventDefault();
     if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
@@ -138,13 +84,13 @@ export class ArchivoAdjuntoComponent {
     try {
       const formData = new FormData();
       formData.append('archivo', file);
-      formData.append('tipoArchivoCodigo', this.codigo); // ✅ ESTO SE ESTÁ ENVIANDO CORRECTAMENTE
+      formData.append('tipoArchivoCodigo', this.codigo);
       formData.append('sessionId', this.sessionService.getSessionId());
       formData.append('usuarioId', '1');
 
       console.log('✅ Datos enviados:', {
         archivo: file.name,
-        tipoArchivoCodigo: this.codigo, // ✅ VERIFICAR QUE ESTE VALOR SEA CORRECTO
+        tipoArchivoCodigo: this.codigo,
         sessionId: this.sessionService.getSessionId(),
       });
 
@@ -168,7 +114,6 @@ export class ArchivoAdjuntoComponent {
   eliminarArchivo() {
     this.archivoActual = null;
     this.archivoSubido.emit(null);
-    // Nota: Los archivos temporales se limpian automáticamente
   }
 
   formatFileSize(bytes: number): string {
@@ -183,20 +128,8 @@ export class ArchivoAdjuntoComponent {
     return new Date(date).toLocaleDateString();
   }
 
-  onDrop(event: DragEvent) {
-    event.preventDefault();
-    this.dragOver = false;
-
-    const files = event.dataTransfer?.files;
-    if (files && files.length > 0) {
-      this.handleFile(files[0]);
-    }
-  }
-
   descargarArchivo() {
     if (this.archivoActual && this.archivoActual.rutaTemporal) {
-      // Para archivos temporales, podrías implementar un endpoint de descarga
-      // o simplemente mostrar información del archivo
       console.log('Archivo temporal:', this.archivoActual);
     }
   }

@@ -541,7 +541,7 @@
         <div *ngIf="contratoData.tipoRepresentanteContratante === 'gerente_general'">
           <div class="archivos-grid">
             <app-archivo-adjunto titulo="Nombramiento HeH Vigente" codigo="CONTRATANTE_NOMBRAMIENTO_HEH"
-              [esObligatorio]="true" (archivoSubido)="onArchivoSubido('CONTRATANTE_NOMBRAMIENTO_HEH', $event)">
+              [esObligatorio]="true" (archivoSubido)="onArchivoSubido($event, 'CONTRATANTE_NOMBRAMIENTO_HEH')">
             </app-archivo-adjunto>
 
             <app-archivo-adjunto titulo="Nombramiento Gemademsa Vigente" codigo="CONTRATANTE_NOMBRAMIENTO_GEMADEMSA"
@@ -1970,7 +1970,7 @@
         </p>
 
         <!-- Espacio amplio para firmas -->
-        <!-- <div style="margin-top: 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+        <div style="margin-top: 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
           <div style="text-align: center;">
             <p class="contract-paragraph"><strong>LA CONTRATANTE</strong></p>
             <div style="border-top: 2px solid black; margin: 60px 20px 20px 20px;"></div>
@@ -2007,10 +2007,9 @@
               RUC: {{ contratoData.rucContratista || '[RUC_CONTRATISTA]' }}
             </p>
           </div>
-        </div> -->
+        </div>
 
 
       </div> <!-- Fin contract-preview -->
     </div>
   </div>
-  

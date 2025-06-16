@@ -2,14 +2,14 @@ import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 declare const html2pdf: any;
-import { PdfService } from '../services/pdf.service'; // Importar el servicio
+import { PdfService } from '../../services/pdf.service'; // Importar el servicio
 import { switchMap, map } from 'rxjs/operators';
-import { ResourceService } from '../services/resource.service';
+import { ResourceService } from '../../services/resource.service';
 import Swal from 'sweetalert2';
-import { ClaseMonedaLiteral } from '../services/clase-moneda-literal.service';
-import { SessionService } from '../services/session.service';
+import { ClaseMonedaLiteral } from '../../services/clase-moneda-literal.service';
+import { SessionService } from '../../services/session.service';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../environments/environment';
+import { environment } from '../../../environments/environment';
 
 // Interfaz para estructurar los datos del contrato
 export interface ContratoData {
@@ -959,83 +959,49 @@ export class PlantillaWordComponent implements AfterViewInit {
 
   // BOTÓN 1: Generar y Descargar PDF
   async generarYDescargarPdf() {
-    if (!this.validarDatosEsenciales()) {
-      alert('Por favor complete todos los campos obligatorios');
-      return;
-    }
-
-    this.isGeneratingPdf = true;
-
     try {
-      const htmlContent = this.getContractHtml();
+      this.isGeneratingPdf = true;
 
-      // ✅ DATOS COMPLETOS Y CORREGIDOS
-      const datosContrato = {
-        // ✅ Campos básicos CORREGIDOS
-        nombreContratista: this.contratoData.nombreContratista || '',
-        rucContratista: this.contratoData.rucContratista || '',
-        montoContrato:
-          this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros || 0,
-
-        // ✅ FECHA FORMATEADA CORRECTAMENTE
-        fechaFirmaContrato: this.getFechaFirmaFormattedISO(),
-
-        // ✅ Campos adicionales
-        representanteContratante: this.getRepresentanteContratanteNombre(),
-        cargoRepresentante: this.getRepresentanteContratanteCargo(),
-        representanteContratista:
-          this.contratoData.representanteLegalContratista || '',
-        direccionContratista:
-          this.contratoData.contratistaDireccionComunicaciones || '',
-        telefonoContratista:
-          this.contratoData.contratistaTelefonosComunicaciones || '',
-        emailContratista:
-          this.contratoData.contratistaCorreoComunicaciones || '',
-
-        // ✅ Datos específicos
-        datosEspecificos: {
-          descripcionBienes:
-            this.contratoData.clausulaCuartaDescripcionBienes || '',
-          lugarEntrega: this.contratoData.clausulaCuartaLugarEntrega || '',
-          incluyeSoporteTecnico:
-            this.contratoData.ofertaContemplaSoporteTecnico,
-          plazoGarantiaTecnica: this.contratoData.plazoGarantiaTecnica || '',
-          formaPago: this.contratoData.clausulaSextaFormaPagoOpcion || '',
-          contratoData: this.contratoData,
-          archivosAdjuntos: this.archivosAdjuntos,
-        },
-      };
-
-      console.log('✅ Datos completos para envío:', datosContrato);
-
-      const resultado = await this.pdfService
-        .generarPdfYCrearContrato(htmlContent, datosContrato)
-        .toPromise();
-
-      this.lastGeneratedContrato = resultado.contrato;
-
-      // Descargar el PDF generado
-      const pdfBlob = await this.pdfService
-        .descargarArchivo(resultado.pdf.archivoId)
-        .toPromise();
-
-      if (pdfBlob) {
-        const fecha = new Date().toISOString().slice(0, 10);
-        const nombreArchivo = `contrato-${
-          this.contratoData.nombreContratista || 'sin-nombre'
-        }-${fecha}.pdf`;
-        this.downloadBlob(pdfBlob, nombreArchivo);
+      if (!this.validarCamposObligatorios()) {
+        this.isGeneratingPdf = false;
+        return;
       }
 
-      alert(
-        'PDF generado, guardado en base de datos y descargado exitosamente'
-      );
-    } catch (error) {
-      console.error('Error al generar PDF:', error);
-      alert(
-        'Error al generar el PDF: ' +
-          (error instanceof Error ? error.message : 'Error desconocido')
-      );
+      const htmlContent = this.contentRef.nativeElement.innerHTML;
+
+      // ✅ USAR EL MÉTODO CORREGIDO
+      const resultado = await this.pdfService
+        .generarPdfYCrearContrato(htmlContent, this.contratoData)
+        .toPromise();
+
+      if (resultado.success && resultado.pdfBlob) {
+        // ✅ DESCARGAR PDF SI SE GENERÓ CORRECTAMENTE
+        const blob = new Blob([resultado.pdfBlob], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `contrato-${
+          this.contratoData.nombreContratista || 'sin-nombre'
+        }-${new Date().toISOString().slice(0, 10)}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+
+        console.log('✅ PDF descargado exitosamente');
+        alert('✅ Contrato creado y PDF generado exitosamente');
+      } else if (resultado.contrato) {
+        // ✅ CONTRATO CREADO PERO ERROR EN PDF
+        console.log('⚠️ Contrato creado pero error generando PDF');
+        alert(
+          `⚠️ Contrato creado exitosamente (ID: ${
+            resultado.contrato.id
+          }), pero hubo un error generando el PDF. ${resultado.error || ''}`
+        );
+      } else {
+        throw new Error('Error en la respuesta del servidor');
+      }
+    } catch (error: any) {
+      console.error('Error al generar contrato y PDF:', error);
+      alert('Error: ' + (error.message || 'Error desconocido'));
     } finally {
       this.isGeneratingPdf = false;
     }
@@ -1314,20 +1280,173 @@ export class PlantillaWordComponent implements AfterViewInit {
       return false;
     }
 
-    // Validar archivos obligatorios
-    const tiposObligatorios = ['CEDULA_REPRESENTANTE', 'RUC_EMPRESA'];
+    // ✅ VALIDAR ARCHIVOS CON DEBUG MEJORADO
+    const archivosRequeridos = this.getArchivosRequeridos();
 
-    for (const tipo of tiposObligatorios) {
+    console.log('🔍 === VALIDACIÓN DE ARCHIVOS ===');
+    console.log(
+      '📋 Archivos requeridos:',
+      archivosRequeridos.map((a) => a.codigo)
+    );
+    console.log(
+      '📁 Archivos subidos:',
+      this.archivosAdjuntos.map((a) => a.tipoArchivoCodigo)
+    );
+
+    for (const archivo of archivosRequeridos) {
       const tieneArchivo = this.archivosAdjuntos.some(
-        (a) => a.tipoArchivoCodigo === tipo
+        (a) => a.tipoArchivoCodigo === archivo.codigo
       );
+
+      console.log(
+        `🔎 Validando ${archivo.codigo}: ${
+          tieneArchivo ? '✅ ENCONTRADO' : '❌ FALTANTE'
+        }`
+      );
+
       if (!tieneArchivo) {
-        alert(`Falta el archivo obligatorio: ${tipo}`);
+        console.error(
+          `❌ ARCHIVO FALTANTE: ${archivo.codigo} - ${archivo.nombre}`
+        );
+        alert(`Falta el archivo obligatorio: ${archivo.nombre}`);
         return false;
       }
     }
 
+    console.log('✅ Todos los archivos requeridos están presentes');
     return true;
+  }
+
+  private getArchivosRequeridos(): { codigo: string; nombre: string }[] {
+    const requeridos: { codigo: string; nombre: string }[] = [];
+
+    // Archivos del contratante (según tipo seleccionado)
+    if (this.contratoData.tipoRepresentanteContratante === 'gerente_general') {
+      requeridos.push(
+        {
+          codigo: 'CONTRATANTE_NOMBRAMIENTO_HEH',
+          nombre: 'Nombramiento HeH Vigente',
+        },
+        {
+          codigo: 'CONTRATANTE_NOMBRAMIENTO_GEMADEMSA',
+          nombre: 'Nombramiento Gemademsa Vigente',
+        },
+        { codigo: 'CONTRATANTE_CEDULA', nombre: 'Cédula del Contratante' },
+        {
+          codigo: 'CONTRATANTE_PAPELETA',
+          nombre: 'Papeleta de Votación del Contratante',
+        },
+        { codigo: 'CONTRATANTE_RUC_HEH', nombre: 'RUC HeH' },
+        { codigo: 'CONTRATANTE_RUC_GEMADEMSA', nombre: 'RUC Gemademsa' }
+      );
+    } else if (
+      this.contratoData.tipoRepresentanteContratante === 'apoderado_especial'
+    ) {
+      requeridos.push(
+        { codigo: 'CONTRATANTE_PODER_ESPECIAL', nombre: 'Poder Especial' },
+        { codigo: 'CONTRATANTE_CEDULA', nombre: 'Cédula del Contratante' },
+        {
+          codigo: 'CONTRATANTE_PAPELETA',
+          nombre: 'Papeleta de Votación del Contratante',
+        }
+      );
+    } else if (
+      this.contratoData.tipoRepresentanteContratante === 'superintendente'
+    ) {
+      requeridos.push(
+        { codigo: 'CONTRATANTE_DESIGNACION', nombre: 'Designación' },
+        { codigo: 'CONTRATANTE_CEDULA', nombre: 'Cédula del Contratante' },
+        {
+          codigo: 'CONTRATANTE_PAPELETA',
+          nombre: 'Papeleta de Votación del Contratante',
+        }
+      );
+
+      // Sumilla solo para contratos > 10k
+      if (
+        this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros &&
+        this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros > 10000
+      ) {
+        requeridos.push({
+          codigo: 'CONTRATANTE_SUMILLA_APROBACION',
+          nombre: 'Sumilla de Aprobación',
+        });
+      }
+    }
+
+    // Archivos del contratista (según tipo seleccionado)
+    if (this.contratoData.tipoRepresentanteContratista === 'persona_natural') {
+      requeridos.push(
+        { codigo: 'CONTRATISTA_RUC', nombre: 'RUC del Contratista' },
+        { codigo: 'CONTRATISTA_CEDULA', nombre: 'Cédula del Contratista' },
+        { codigo: 'CONTRATISTA_PAPELETA', nombre: 'Papeleta del Contratista' }
+      );
+    } else if (
+      this.contratoData.tipoRepresentanteContratista === 'persona_juridica'
+    ) {
+      if (
+        this.contratoData.tipoRepresentanteContratistaJuridica ===
+        'gerente_general'
+      ) {
+        requeridos.push(
+          {
+            codigo: 'CONTRATISTA_NOMBRAMIENTO',
+            nombre: 'Nombramiento del Contratista',
+          },
+          { codigo: 'CONTRATISTA_CEDULA', nombre: 'Cédula del Contratista' },
+          {
+            codigo: 'CONTRATISTA_PAPELETA',
+            nombre: 'Papeleta del Contratista',
+          },
+          { codigo: 'CONTRATISTA_RUC', nombre: 'RUC del Contratista' }
+        );
+      } else if (
+        this.contratoData.tipoRepresentanteContratistaJuridica ===
+        'apoderado_especial'
+      ) {
+        requeridos.push(
+          {
+            codigo: 'CONTRATISTA_PODER_ESPECIAL',
+            nombre: 'Poder Especial del Contratista',
+          },
+          { codigo: 'CONTRATISTA_CEDULA', nombre: 'Cédula del Contratista' },
+          { codigo: 'CONTRATISTA_PAPELETA', nombre: 'Papeleta del Contratista' }
+        );
+      }
+    }
+
+    // Archivos generales siempre obligatorios
+    requeridos.push({ codigo: 'OFERTA_VIGENTE', nombre: 'Oferta Vigente' });
+
+    // Garantías (según monto del contrato)
+    if (
+      this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros &&
+      this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros > 0
+    ) {
+      // Garantía técnica siempre obligatoria
+      requeridos.push({
+        codigo: 'GARANTIA_TECNICA',
+        nombre: 'Garantía Técnica',
+      });
+
+      // Póliza fiel cumplimiento para >= 50k
+      if (this.contratoData.clausulaQuintaPrecioTotalLetrasNumeros >= 50000) {
+        requeridos.push({
+          codigo: 'POLIZA_FIEL_CUMPLIMIENTO',
+          nombre: 'Póliza Fiel Cumplimiento',
+        });
+      }
+
+      // Póliza buen uso anticipo para contratos con anticipo
+      if (this.contratoData.clausulaSextaFormaPagoOpcion === 'con_anticipo') {
+        requeridos.push({
+          codigo: 'POLIZA_BUEN_USO_ANTICIPO',
+          nombre: 'Póliza Buen Uso Anticipo',
+        });
+      }
+    }
+
+    return requeridos;
   }
 
   // Obtener HTML del contrato
@@ -1435,29 +1554,78 @@ export class PlantillaWordComponent implements AfterViewInit {
   }
 
   onArchivoSubido(archivo: any, tipoArchivo: string) {
-    if (archivo) {
-      console.log(`Archivo ${tipoArchivo} subido:`, archivo);
+    console.log(`📎 Archivo subido para ${tipoArchivo}:`, archivo);
+    console.log(`📎 Tipo de archivo recibido:`, typeof archivo);
+    console.log(`📎 Es string:`, typeof archivo === 'string');
+
+    // ✅ VERIFICAR SI LOS PARÁMETROS ESTÁN INTERCAMBIADOS
+    let archivoReal: any;
+    let tipoReal: string;
+
+    if (typeof archivo === 'string' && typeof tipoArchivo === 'object') {
+      // Los parámetros están intercambiados
+      console.log('⚠️ Parámetros intercambiados, corrigiendo...');
+      archivoReal = tipoArchivo;
+      tipoReal = archivo;
+    } else if (typeof archivo === 'object' && typeof tipoArchivo === 'string') {
+      // Los parámetros están correctos
+      archivoReal = archivo;
+      tipoReal = tipoArchivo;
+    } else {
+      console.error('❌ Tipos de parámetros incorrectos:', {
+        archivo,
+        tipoArchivo,
+      });
+      return;
+    }
+
+    console.log(`✅ Archivo corregido:`, archivoReal);
+    console.log(`✅ Tipo corregido:`, tipoReal);
+
+    if (archivoReal) {
+      // ✅ ASEGURAR QUE EL OBJETO ARCHIVO TENGA LA ESTRUCTURA CORRECTA
+      const archivoNormalizado = {
+        ...archivoReal,
+        tipoArchivoCodigo: archivoReal.tipoArchivoCodigo || tipoReal,
+      };
+
+      console.log(`✅ Archivo normalizado:`, archivoNormalizado);
 
       // Buscar si ya existe un archivo de este tipo
       const index = this.archivosAdjuntos.findIndex(
-        (a) => a.tipoArchivoCodigo === archivo.tipoArchivoCodigo
+        (a) => a.tipoArchivoCodigo === archivoNormalizado.tipoArchivoCodigo
       );
 
       if (index >= 0) {
         // Reemplazar archivo existente
-        this.archivosAdjuntos[index] = archivo;
+        this.archivosAdjuntos[index] = archivoNormalizado;
+        console.log(`🔄 Archivo reemplazado en índice ${index}`);
       } else {
         // Agregar nuevo archivo
-        this.archivosAdjuntos.push(archivo);
+        this.archivosAdjuntos.push(archivoNormalizado);
+        console.log(
+          `➕ Archivo agregado, total: ${this.archivosAdjuntos.length}`
+        );
       }
     } else {
       // Eliminar archivo si es null
+      const sizeBefore = this.archivosAdjuntos.length;
       this.archivosAdjuntos = this.archivosAdjuntos.filter(
-        (a) => a.tipoArchivoCodigo !== tipoArchivo
+        (a) => a.tipoArchivoCodigo !== tipoReal
+      );
+      console.log(
+        `🗑️ Archivos eliminados: ${sizeBefore - this.archivosAdjuntos.length}`
       );
     }
 
-    console.log('Archivos adjuntos actuales:', this.archivosAdjuntos);
+    console.log(
+      '📋 Archivos adjuntos actuales:',
+      this.archivosAdjuntos.map((a) => ({
+        codigo: a.tipoArchivoCodigo,
+        nombre: a.nombreOriginal,
+        id: a.id,
+      }))
+    );
   }
 
   isContratoMayorA10k(): boolean {

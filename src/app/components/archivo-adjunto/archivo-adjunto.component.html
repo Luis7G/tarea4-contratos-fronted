@@ -1,0 +1,41 @@
+<div class="archivo-adjunto-container" [class.obligatorio]="esObligatorio">
+  <div class="archivo-header">
+    <h5>
+      {{ titulo }}
+      <span *ngIf="esObligatorio" class="obligatorio-badge">*</span>
+    </h5>
+    <p *ngIf="descripcion" class="descripcion">{{ descripcion }}</p>
+  </div>
+
+  <div class="archivo-dropzone" (drop)="onFileDropped($event)" (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)" (click)="fileInput.click()" [class.has-file]="archivoActual"
+    [class.uploading]="isUploading">
+    <input type="file" #fileInput style="display: none" (change)="onFileSelected($event)"
+      accept=".pdf,.jpg,.jpeg,.png" />
+
+    <div *ngIf="!archivoActual && !isUploading" class="dropzone-content">
+      <i class="📎"></i>
+      <span>Arrastra o haz clic para subir</span>
+      <small>PDF, JPG, PNG (máx. 5MB)</small>
+    </div>
+
+    <div *ngIf="isUploading" class="uploading-content">
+      <div class="spinner"></div>
+      <span>Subiendo...</span>
+    </div>
+
+    <div *ngIf="archivoActual" class="file-info">
+      <i class="✅"></i>
+      <div class="file-details">
+        <strong>{{ archivoActual.nombreOriginal }}</strong>
+        <small>{{ formatFileSize(archivoActual['tamaño']) }} -
+          {{ formatDate(archivoActual.fechaSubida) }}</small>
+      </div>
+      <button type="button" class="btn-remove" (click)="eliminarArchivo()">
+        ❌
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+</div>
